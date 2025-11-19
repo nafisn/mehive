@@ -91,6 +91,7 @@ const HoneycombGrid = forwardRef(({ items, centerItem, onHexagonClick }, ref) =>
         'center': { x: 0, y: 0, q: 0, r: 0 }
     });
     const [scale, setScale] = useState(1);
+    const [translate, setTranslate] = useState({ x: 0, y: 0 });
 
     const [errorMsg, setErrorMsg] = useState(null);
 
@@ -106,8 +107,6 @@ const HoneycombGrid = forwardRef(({ items, centerItem, onHexagonClick }, ref) =>
             return pos.q === q && pos.r === r;
         });
     };
-
-
 
     const handleStop = (e, data, id) => {
         // 1. Calculate raw grid coordinates from pixels
@@ -207,28 +206,6 @@ const HoneycombGrid = forwardRef(({ items, centerItem, onHexagonClick }, ref) =>
                     // Find next available spot using spiral algorithm
                     let q = 0, r = 0;
                     let layer = 1;
-                    let found = false;
-
-                    // Simple spiral search
-                    while (!found && layer < 10) {
-                        let dq = 0, dr = -1; // Start direction
-                        for (let i = 0; i < 6; i++) { // 6 sides
-                            for (let j = 0; j < layer; j++) {
-                                // Move to next hex
-                                if (i === 0 && j === 0) {
-                                    // Initial move out to layer
-                                    q = 0; r = -layer;
-                                } else {
-                                    // Move in current direction
-                                    // Directions: (1, -1), (1, 0), (0, 1), (-1, 1), (-1, 0), (0, -1)
-                                    // Simplified: check neighbors of current
-                                    // Actually, let's just iterate all points in the ring
-                                }
-                            }
-                        }
-                        layer++;
-                    }
-
                     // Fallback: Just find first non-occupied spot in a simple grid search
                     // This is easier and more robust for now
                     let placed = false;
@@ -274,8 +251,8 @@ const HoneycombGrid = forwardRef(({ items, centerItem, onHexagonClick }, ref) =>
                 if (pos.y + halfH > maxY) maxY = pos.y + halfH;
             });
 
-            const contentWidth = maxX - minX + 300; // + generous padding
-            const contentHeight = maxY - minY + 300;
+            const contentWidth = maxX - minX + 100; // Reduced padding for closer zoom
+            const contentHeight = maxY - minY + 100;
 
             const availableWidth = window.innerWidth;
             const availableHeight = window.innerHeight - 120; // account for UI
@@ -283,19 +260,26 @@ const HoneycombGrid = forwardRef(({ items, centerItem, onHexagonClick }, ref) =>
             const scaleX = availableWidth / contentWidth;
             const scaleY = availableHeight / contentHeight;
 
-            // Use the smaller scale to fit both dimensions, but cap at 1 (don't zoom in)
-            const newScale = Math.min(1, scaleX, scaleY);
+            // Use the smaller scale to fit both dimensions, but cap at 1.2 (allow slight zoom in)
+            const newScale = Math.min(1.2, scaleX, scaleY);
+
+            // Calculate center offset
+            const centerX = (minX + maxX) / 2;
+            const centerY = (minY + maxY) / 2;
 
             // Only update if significantly different to avoid jitter
-            if (Math.abs(newScale - scale) > 0.01) {
+            if (Math.abs(newScale - scale) > 0.01 ||
+                Math.abs(-centerX - translate.x) > 1 ||
+                Math.abs(-centerY - translate.y) > 1) {
                 setScale(newScale);
+                setTranslate({ x: -centerX, y: -centerY });
             }
         };
 
         handleResize(); // Initial calc
         window.addEventListener('resize', handleResize);
         return () => window.removeEventListener('resize', handleResize);
-    }, [positions, scale]);
+    }, [positions, scale, translate]);
 
     const getPosition = (id) => {
         return positions[id] || { x: 0, y: 0 };
@@ -319,7 +303,7 @@ const HoneycombGrid = forwardRef(({ items, centerItem, onHexagonClick }, ref) =>
                     {errorMsg}
                 </div>
             )}
-            <div className={styles.gridOrigin} style={{ transform: `scale(${scale})` }}>
+            <div className={styles.gridOrigin} style={{ transform: `scale(${scale}) translate(${translate.x}px, ${translate.y}px)` }}>
                 <DraggableHexagon
                     item={centerItem}
                     isCenter={true}

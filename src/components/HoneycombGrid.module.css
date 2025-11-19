@@ -14,10 +14,3 @@
   height: 0;
   /* This centers the (0,0) coordinate visually */
 }
-
-.draggableHex {
-  /* Remove margins since we are using absolute positioning */
-  margin: 0 !important;
-  /* Center the hex on its coordinate */
-  transform: translate(-50%, -50%);
-}
