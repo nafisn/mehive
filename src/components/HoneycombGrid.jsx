@@ -174,71 +174,27 @@ const HoneycombGrid = forwardRef(({ items, centerItem, onHexagonClick }, ref) =>
     useImperativeHandle(ref, () => ({
         exportGrid: async () => {
             const element = document.getElementById('honeycomb-grid-container');
-            const gridOrigin = element.querySelector(`.${styles.gridOrigin}`);
-
-            if (!element || !gridOrigin) {
+            if (!element) {
                 alert("Grid container not found!");
                 return;
             }
 
             try {
-                // 1. Calculate Bounding Box based on Logical Positions (Source of Truth)
-                const allPositions = Object.values(positions);
-                if (allPositions.length === 0) throw new Error("No hexagons to export.");
-
-                const halfW = HEX_WIDTH / 2;
-                const halfH = HEX_HEIGHT / 2;
-
-                let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
-
-                allPositions.forEach(pos => {
-                    if (pos.x - halfW < minX) minX = pos.x - halfW;
-                    if (pos.x + halfW > maxX) maxX = pos.x + halfW;
-                    if (pos.y - halfH < minY) minY = pos.y - halfH;
-                    if (pos.y + halfH > maxY) maxY = pos.y + halfH;
-                });
-
-                // 2. Add Padding
-                const PADDING = 60;
-                const cropWidth = maxX - minX + (PADDING * 2);
-                const cropHeight = maxY - minY + (PADDING * 2);
-
-                // 3. Calculate Center Shift
-                // We want the center of the bounding box to be at the center of the captured image.
-                // The captured image center will be at (0,0) relative to gridOrigin (since gridOrigin is centered).
-                // The bounding box center is at ((minX + maxX)/2, (minY + maxY)/2).
-                // We need to shift gridOrigin so that the bounding box center moves to (0,0).
-                const centerX = (minX + maxX) / 2;
-                const centerY = (minY + maxY) / 2;
-
-                // 4. Apply Temporary Transform
-                const originalTransform = gridOrigin.style.transform;
-                // We must subtract the center offset to bring it to (0,0)
-                gridOrigin.style.transform = `translate(${-centerX}px, ${-centerY}px)`;
-
-                // 5. Capture
+                // Capture the container exactly as it appears (scaled and centered)
                 const blob = await toBlob(element, {
                     backgroundColor: '#242424',
-                    width: cropWidth,
-                    height: cropHeight,
+                    width: window.innerWidth,
+                    height: window.innerHeight,
                     style: {
-                        // Force the container to match the crop size
-                        width: `${cropWidth}px`,
-                        height: `${cropHeight}px`,
-                        // Ensure gridOrigin stays centered in this new "viewport"
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        overflow: 'visible'
+                        width: '100vw',
+                        height: '100vh',
+                        overflow: 'hidden'
                     },
-                    cacheBust: true,
                     filter: (node) => {
-                        return !node.innerText || !node.innerText.includes('Cannot place');
+                        // Exclude any UI controls if they somehow got inside (shouldn't happen)
+                        return !node.classList || !node.classList.contains('ui-controls');
                     }
                 });
-
-                // 6. Restore Transform
-                gridOrigin.style.transform = originalTransform;
 
                 if (!blob) throw new Error("Export failed: Blob is null");
 
@@ -251,8 +207,6 @@ const HoneycombGrid = forwardRef(({ items, centerItem, onHexagonClick }, ref) =>
 
             } catch (err) {
                 console.error('Export failed:', err);
-                // Ensure transform is restored even if error
-                if (gridOrigin) gridOrigin.style.transform = '';
                 alert("Export failed: " + err.message);
             }
         }
@@ -346,11 +300,11 @@ const HoneycombGrid = forwardRef(({ items, centerItem, onHexagonClick }, ref) =>
                 if (pos.y + halfH > maxY) maxY = pos.y + halfH;
             });
 
-            const contentWidth = maxX - minX + 100; // + padding
-            const contentHeight = maxY - minY + 100;
+            const contentWidth = maxX - minX + 300; // + generous padding
+            const contentHeight = maxY - minY + 300;
 
             const availableWidth = window.innerWidth;
-            const availableHeight = window.innerHeight - 100; // account for UI
+            const availableHeight = window.innerHeight - 120; // account for UI
 
             const scaleX = availableWidth / contentWidth;
             const scaleY = availableHeight / contentHeight;

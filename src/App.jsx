@@ -2,7 +2,6 @@ import { useState, useRef, useEffect } from 'react'
 import './App.css'
 import HoneycombGrid from './components/HoneycombGrid'
 import SuperlativeModal from './components/SuperlativeModal'
-import SelectionOverlay from './components/SelectionOverlay';
 import { toBlob } from 'html-to-image';
 import { saveState, loadState, clearState } from './utils/db';
 
@@ -68,7 +67,6 @@ function App() {
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState(null);
-  const [isSelectionMode, setIsSelectionMode] = useState(false);
   const gridRef = useRef(null);
 
   // Persistence Effect
@@ -129,85 +127,9 @@ function App() {
     }
   };
 
-  // Start the manual export process
-  const handleManualExport = () => {
-    setIsSelectionMode(true);
-  };
-
-  const handleAutoExport = async () => {
-    try {
-      const blob = await toBlob(document.body, {
-        backgroundColor: '#242424',
-        width: window.innerWidth,
-        height: window.innerHeight,
-        filter: (node) => {
-          // Exclude the UI controls and any overlays
-          return (!node.classList || !node.classList.contains('ui-controls')) &&
-            (!node.classList || !node.classList.contains('selection-overlay'));
-        }
-      });
-
-      if (!blob) throw new Error("Blob is null");
-
-      const dataUrl = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.download = 'MeHive-Snapshot.png';
-      link.href = dataUrl;
-      link.click();
-      setTimeout(() => URL.revokeObjectURL(dataUrl), 1000);
-
-    } catch (err) {
-      console.error("Auto-export failed:", err);
-      alert("Auto-export failed: " + err.message);
-    }
-  };
-
-  const handleSelectionCancel = () => {
-    setIsSelectionMode(false);
-  };
-
-  const handleSelectionConfirm = async (selection) => {
-    // 1. Hide the overlay so it's not in the screenshot
-    setIsSelectionMode(false);
-
-    // 2. Wait a moment for the UI to update (overlay to disappear)
-    await new Promise(resolve => setTimeout(resolve, 100));
-
-    const element = document.getElementById('honeycomb-grid-container'); // Or document.body for full screen
-    if (!element) return;
-
-    try {
-      // 3. Capture the entire element (or body)
-      const blob = await toBlob(document.body, {
-        backgroundColor: '#242424',
-        width: selection.width,
-        height: selection.height,
-        style: {
-          // We translate the body content so the top-left of the selection becomes (0,0)
-          transform: `translate(${-selection.x}px, ${-selection.y}px)`,
-          transformOrigin: 'top left',
-          width: '100vw', // Keep original size to ensure content renders
-          height: '100vh',
-          overflow: 'visible'
-        },
-        filter: (node) => {
-          // Exclude the UI controls from the screenshot
-          return !node.classList || !node.classList.contains('ui-controls');
-        }
-      });
-
-      if (!blob) throw new Error("Blob is null");
-
-      const dataUrl = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.download = 'MeHive-Selection.png';
-      link.href = dataUrl;
-      link.click();
-      setTimeout(() => URL.revokeObjectURL(dataUrl), 1000);
-
-    } catch (err) {
-      console.error("Export failed:", err);
-      alert("Export failed: " + err.message);
+  const handleAutoExport = () => {
+    if (gridRef.current) {
+      gridRef.current.exportGrid();
     }
   };
 
@@ -228,11 +150,8 @@ function App() {
           <button className="add-btn" onClick={handleAddHexagon}>
             ➕ Add Hexagon
           </button>
-          <button className="export-btn" onClick={handleManualExport} title="Drag to select area">
-            ✂️ Manual Export
-          </button>
-          <button className="export-btn" onClick={handleAutoExport} title="Auto-crop entire grid">
-            📸 Auto Export
+          <button className="export-btn" onClick={handleAutoExport} title="Save image of the entire hive">
+            📸 Export Hive
           </button>
           <button className="reset-btn" onClick={handleReset} style={{ backgroundColor: '#e63946', marginLeft: '10px' }}>
             Reset
@@ -248,13 +167,6 @@ function App() {
         onSave={handleSave}
         onDelete={handleDeleteHexagon}
       />
-
-      {isSelectionMode && (
-        <SelectionOverlay
-          onConfirm={handleSelectionConfirm}
-          onCancel={handleSelectionCancel}
-        />
-      )}
     </div>
   )
 }

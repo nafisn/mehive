@@ -31,10 +31,6 @@ const Hexagon = ({
         return `rgba(${r}, ${g}, ${b}, ${alpha !== undefined ? alpha : 0.5})`;
     };
 
-    const contentStyle = {
-        backgroundColor: hexToRgba(boxColor, boxOpacity)
-    };
-
     // Handle both double-click (desktop) and double-tap (mobile)
     const handleTap = (e) => {
         const now = Date.now();
@@ -50,14 +46,6 @@ const Hexagon = ({
         lastTapRef.current = now;
     };
 
-    // Single tap handler for mobile edit button
-    const handleEditClick = (e) => {
-        e.stopPropagation();
-        if (onDoubleClick) {
-            onDoubleClick(e);
-        }
-    };
-
     return (
         <div
             className={`${styles.hexagonWrapper} ${className}`}
@@ -69,18 +57,10 @@ const Hexagon = ({
                 className={`${styles.hexagon} ${isCenter ? styles.centerNode : ''}`}
                 style={bgStyle}
             >
-                <div className={styles.hexagonContent} style={contentStyle}>
+                <div className={styles.hexagonContent}>
                     <h3 className={styles.title} style={{ color: titleColor || 'white' }}>{title}</h3>
                     {subtitle && <p className={styles.subtitle} style={{ color: subtitleColor || 'rgba(255, 255, 255, 0.8)' }}>{subtitle}</p>}
                 </div>
-                {/* Mobile edit button */}
-                <button
-                    className={styles.mobileEditBtn}
-                    onClick={handleEditClick}
-                    aria-label="Edit"
-                >
-                    ✏️
-                </button>
             </div>
         </div>
     );
