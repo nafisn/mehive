@@ -26,12 +26,12 @@ function App() {
 
   // Initialize state from localStorage or defaults
   const [superlatives, setSuperlatives] = useState(() => {
-    const saved = localStorage.getItem('memohive_superlatives');
+    const saved = localStorage.getItem('mehive_superlatives');
     return saved ? JSON.parse(saved) : initialData;
   });
 
   const [centerNode, setCenterNode] = useState(() => {
-    const saved = localStorage.getItem('memohive_center');
+    const saved = localStorage.getItem('mehive_center');
     return saved ? JSON.parse(saved) : initialCenterNode;
   });
 
@@ -42,8 +42,8 @@ function App() {
 
   // Persistence Effect
   useEffect(() => {
-    localStorage.setItem('memohive_superlatives', JSON.stringify(superlatives));
-    localStorage.setItem('memohive_center', JSON.stringify(centerNode));
+    localStorage.setItem('mehive_superlatives', JSON.stringify(superlatives));
+    localStorage.setItem('mehive_center', JSON.stringify(centerNode));
   }, [superlatives, centerNode]);
 
   const handleHexClick = (item) => {
@@ -80,15 +80,11 @@ function App() {
 
   const handleReset = () => {
     if (window.confirm("Are you sure you want to reset everything? This will delete all your customizations.")) {
-      localStorage.removeItem('memohive_superlatives');
-      localStorage.removeItem('memohive_center');
+      localStorage.removeItem('mehive_superlatives');
+      localStorage.removeItem('mehive_center');
       setSuperlatives(initialData);
       setCenterNode(initialCenterNode);
-      // Also need to clear grid positions if we were saving them, 
-      // but currently positions are internal to HoneycombGrid. 
-      // Ideally HoneycombGrid should also reset or be re-mounted.
-      // For now, resetting data is the main part.
-      window.location.reload(); // Simple way to ensure everything resets including grid positions
+      window.location.reload();
     }
   };
 
@@ -114,7 +110,7 @@ function App() {
 
       const dataUrl = URL.createObjectURL(blob);
       const link = document.createElement('a');
-      link.download = 'memohive-snapshot.png';
+      link.download = 'MeHive-Snapshot.png';
       link.href = dataUrl;
       link.click();
       setTimeout(() => URL.revokeObjectURL(dataUrl), 1000);
@@ -130,7 +126,6 @@ function App() {
   };
 
   const handleSelectionConfirm = async (selection) => {
-    // ... (existing logic)
     // 1. Hide the overlay so it's not in the screenshot
     setIsSelectionMode(false);
 
@@ -164,7 +159,7 @@ function App() {
 
       const dataUrl = URL.createObjectURL(blob);
       const link = document.createElement('a');
-      link.download = 'memohive-selection.png';
+      link.download = 'MeHive-Selection.png';
       link.href = dataUrl;
       link.click();
       setTimeout(() => URL.revokeObjectURL(dataUrl), 1000);

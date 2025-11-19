@@ -241,7 +241,7 @@ const HoneycombGrid = forwardRef(({ items, centerItem, onHexagonClick }, ref) =>
 
                 const dataUrl = URL.createObjectURL(blob);
                 const link = document.createElement('a');
-                link.download = 'my-memohive-year.png';
+                link.download = 'MeHive-Year.png';
                 link.href = dataUrl;
                 link.click();
                 setTimeout(() => URL.revokeObjectURL(dataUrl), 1000);

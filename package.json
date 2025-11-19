@@ -1,5 +1,6 @@
 {
-  "name": "MemoHive",
+  "name": "MeHive",
+  "private": true,
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
