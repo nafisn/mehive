@@ -4,6 +4,7 @@ import HoneycombGrid from './components/HoneycombGrid'
 import SuperlativeModal from './components/SuperlativeModal'
 import SelectionOverlay from './components/SelectionOverlay';
 import { toBlob } from 'html-to-image';
+import { saveState, loadState, clearState } from './utils/db';
 
 function App() {
   // Initial dummy data based on user request
@@ -24,16 +25,46 @@ function App() {
     isCenter: true
   };
 
-  // Initialize state from localStorage or defaults
-  const [superlatives, setSuperlatives] = useState(() => {
-    const saved = localStorage.getItem('mehive_superlatives');
-    return saved ? JSON.parse(saved) : initialData;
-  });
+  // Initialize state with defaults first
+  const [superlatives, setSuperlatives] = useState(initialData);
+  const [centerNode, setCenterNode] = useState(initialCenterNode);
+  const [isLoaded, setIsLoaded] = useState(false);
 
-  const [centerNode, setCenterNode] = useState(() => {
-    const saved = localStorage.getItem('mehive_center');
-    return saved ? JSON.parse(saved) : initialCenterNode;
-  });
+  // Load data from DB or migrate from localStorage
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        // 1. Try migration from localStorage first
+        const localSuperlatives = localStorage.getItem('mehive_superlatives');
+        const localCenter = localStorage.getItem('mehive_center');
+
+        if (localSuperlatives) {
+          const parsed = JSON.parse(localSuperlatives);
+          setSuperlatives(parsed);
+          await saveState('mehive_superlatives', parsed);
+          localStorage.removeItem('mehive_superlatives');
+        } else {
+          const dbSuperlatives = await loadState('mehive_superlatives');
+          if (dbSuperlatives) setSuperlatives(dbSuperlatives);
+        }
+
+        if (localCenter) {
+          const parsed = JSON.parse(localCenter);
+          setCenterNode(parsed);
+          await saveState('mehive_center', parsed);
+          localStorage.removeItem('mehive_center');
+        } else {
+          const dbCenter = await loadState('mehive_center');
+          if (dbCenter) setCenterNode(dbCenter);
+        }
+      } catch (error) {
+        console.error("Error loading data:", error);
+      } finally {
+        setIsLoaded(true);
+      }
+    };
+    loadData();
+  }, []);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState(null);
@@ -42,9 +73,18 @@ function App() {
 
   // Persistence Effect
   useEffect(() => {
-    localStorage.setItem('mehive_superlatives', JSON.stringify(superlatives));
-    localStorage.setItem('mehive_center', JSON.stringify(centerNode));
-  }, [superlatives, centerNode]);
+    if (!isLoaded) return; // Don't save defaults over DB data before loading
+    const saveData = async () => {
+      try {
+        await saveState('mehive_superlatives', superlatives);
+        await saveState('mehive_center', centerNode);
+      } catch (error) {
+        console.error("Error saving data:", error);
+      }
+    };
+    const timeoutId = setTimeout(saveData, 500); // Debounce saves
+    return () => clearTimeout(timeoutId);
+  }, [superlatives, centerNode, isLoaded]);
 
   const handleHexClick = (item) => {
     setSelectedItem(item);
@@ -78,9 +118,10 @@ function App() {
     setIsModalOpen(false);
   };
 
-  const handleReset = () => {
+  const handleReset = async () => {
     if (window.confirm("Are you sure you want to reset everything? This will delete all your customizations.")) {
-      localStorage.removeItem('mehive_superlatives');
+      await clearState();
+      localStorage.removeItem('mehive_superlatives'); // Just in case
       localStorage.removeItem('mehive_center');
       setSuperlatives(initialData);
       setCenterNode(initialCenterNode);

@@ -50,6 +50,7 @@ const hexRound = (q, r) => {
 const DraggableHexagon = ({ item, index, isCenter, position, onStop, onHexagonClick, style }) => {
     const nodeRef = useRef(null);
     const id = isCenter ? 'center' : item.id;
+    const { scale = 1, ...divStyle } = style || {};
 
     return (
         <Draggable
@@ -57,6 +58,7 @@ const DraggableHexagon = ({ item, index, isCenter, position, onStop, onHexagonCl
             position={position}
             onStop={(e, data) => onStop(e, data, id)}
             grid={[1, 1]}
+            scale={scale}
         >
             <div
                 ref={nodeRef}
@@ -65,7 +67,7 @@ const DraggableHexagon = ({ item, index, isCenter, position, onStop, onHexagonCl
                     position: 'absolute',
                     top: 0,
                     left: 0,
-                    ...style // Apply animation delay here
+                    ...divStyle // Apply animation delay here
                 }}
             >
                 <div style={{ transform: 'translate(-50%, -50%)' }}>
@@ -87,6 +89,7 @@ const HoneycombGrid = forwardRef(({ items, centerItem, onHexagonClick }, ref) =>
     const [positions, setPositions] = useState({
         'center': { x: 0, y: 0, q: 0, r: 0 }
     });
+    const [scale, setScale] = useState(1);
 
     const [errorMsg, setErrorMsg] = useState(null);
 
@@ -149,16 +152,16 @@ const HoneycombGrid = forwardRef(({ items, centerItem, onHexagonClick }, ref) =>
 
         // Check Overlap
         if (isOccupied(raw.q, raw.r, id)) {
-            setErrorMsg("Cannot overlap with another hexagon!");
+            console.log("Cannot overlap with another hexagon!");
             return;
         }
 
         // Check Connectivity (Must touch at least one other node, unless it's the only one or center)
         // For this app, everything must connect to the hive (which starts at center)
-        if (id !== 'center' && !isConnected(raw.q, raw.r, id)) {
-            setErrorMsg("Must connect to the hive!");
-            return;
-        }
+        // if (id !== 'center' && !isConnected(raw.q, raw.r, id)) {
+        //     setErrorMsg("Must connect to the hive!");
+        //     return;
+        // }
 
         // 4. Update State if Valid
         const newPixel = hexToPixel(raw.q, raw.r);
@@ -326,6 +329,46 @@ const HoneycombGrid = forwardRef(({ items, centerItem, onHexagonClick }, ref) =>
         });
     }, [items]);
 
+    // Responsive Scaling
+    React.useEffect(() => {
+        const handleResize = () => {
+            const allPositions = Object.values(positions);
+            if (allPositions.length === 0) return;
+
+            const halfW = HEX_WIDTH / 2;
+            const halfH = HEX_HEIGHT / 2;
+            let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+
+            allPositions.forEach(pos => {
+                if (pos.x - halfW < minX) minX = pos.x - halfW;
+                if (pos.x + halfW > maxX) maxX = pos.x + halfW;
+                if (pos.y - halfH < minY) minY = pos.y - halfH;
+                if (pos.y + halfH > maxY) maxY = pos.y + halfH;
+            });
+
+            const contentWidth = maxX - minX + 100; // + padding
+            const contentHeight = maxY - minY + 100;
+
+            const availableWidth = window.innerWidth;
+            const availableHeight = window.innerHeight - 100; // account for UI
+
+            const scaleX = availableWidth / contentWidth;
+            const scaleY = availableHeight / contentHeight;
+
+            // Use the smaller scale to fit both dimensions, but cap at 1 (don't zoom in)
+            const newScale = Math.min(1, scaleX, scaleY);
+
+            // Only update if significantly different to avoid jitter
+            if (Math.abs(newScale - scale) > 0.01) {
+                setScale(newScale);
+            }
+        };
+
+        handleResize(); // Initial calc
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, [positions, scale]);
+
     const getPosition = (id) => {
         return positions[id] || { x: 0, y: 0 };
     };
@@ -348,14 +391,14 @@ const HoneycombGrid = forwardRef(({ items, centerItem, onHexagonClick }, ref) =>
                     {errorMsg}
                 </div>
             )}
-            <div className={styles.gridOrigin}>
+            <div className={styles.gridOrigin} style={{ transform: `scale(${scale})` }}>
                 <DraggableHexagon
                     item={centerItem}
                     isCenter={true}
                     position={getPosition('center')}
                     onStop={handleStop}
                     onHexagonClick={onHexagonClick}
-                    style={{ animationDelay: '0ms' }}
+                    style={{ animationDelay: '0ms', scale }}
                 />
                 {items.map((item, index) => (
                     <DraggableHexagon
@@ -366,7 +409,7 @@ const HoneycombGrid = forwardRef(({ items, centerItem, onHexagonClick }, ref) =>
                         position={getPosition(item.id)}
                         onStop={handleStop}
                         onHexagonClick={onHexagonClick}
-                        style={{ animationDelay: `${(index + 1) * 100}ms` }}
+                        style={{ animationDelay: `${(index + 1) * 100}ms`, scale }}
                     />
                 ))}
             </div>
