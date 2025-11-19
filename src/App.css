@@ -1,0 +1,33 @@
+.app-container {
+    width: 100vw;
+    height: 100vh;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    /* Prevent scrollbars from full-screen grid */
+}
+
+.ui-controls {
+    position: fixed;
+    bottom: 30px;
+    left: 30px;
+    z-index: 1000;
+    text-align: left;
+    background: rgba(0, 0, 0, 0.6);
+    /* Semi-transparent bg for readability */
+    padding: 1.5rem;
+    border-radius: 12px;
+    backdrop-filter: blur(5px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.ui-controls h1 {
+    margin: 0 0 0.5rem 0;
+    font-size: 2.5rem;
+}
+
+.ui-controls p {
+    margin: 0;
+    opacity: 0.8;
+    font-size: 0.9rem;
+}

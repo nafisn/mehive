@@ -1,0 +1,128 @@
+.overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.75);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    backdrop-filter: blur(5px);
+}
+
+.modal {
+    background-color: #242424;
+    padding: 2rem;
+    border-radius: 16px;
+    width: 90%;
+    max-width: 500px;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+    border: 1px solid #444;
+    position: relative;
+    animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+    from {
+        transform: translateY(20px);
+        opacity: 0;
+    }
+
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+.header {
+    margin-bottom: 1.5rem;
+    text-align: center;
+}
+
+.header h2 {
+    margin: 0;
+    color: #fff;
+}
+
+.formGroup {
+    margin-bottom: 1.5rem;
+    text-align: left;
+}
+
+.label {
+    display: block;
+    margin-bottom: 0.5rem;
+    color: #aaa;
+    font-size: 0.9rem;
+}
+
+.input,
+.textarea {
+    width: 100%;
+    padding: 0.8rem;
+    border-radius: 8px;
+    border: 1px solid #444;
+    background-color: #1a1a1a;
+    color: white;
+    font-family: inherit;
+    box-sizing: border-box;
+}
+
+.textarea {
+    min-height: 100px;
+    resize: vertical;
+}
+
+.imagePreview {
+    width: 100%;
+    height: 200px;
+    background-color: #1a1a1a;
+    border-radius: 8px;
+    margin-bottom: 1rem;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+    border: 2px dashed #444;
+    position: relative;
+}
+
+.imagePreview img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
+    margin-top: 2rem;
+}
+
+.cancelBtn {
+    background-color: transparent;
+    border: 1px solid #444;
+    color: #ccc;
+}
+
+.saveBtn {
+    background-color: #646cff;
+    color: white;
+}
+
+.saveBtn:hover {
+    background-color: #535bf2;
+}
+
+.fileInput {
+    display: none;
+}
+
+.uploadBtn {
+    cursor: pointer;
+    color: #646cff;
+    text-decoration: underline;
+}

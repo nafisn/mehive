@@ -1,0 +1,101 @@
+.hexagonWrapper {
+    width: 200px;
+    height: 220px;
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 0;
+    cursor: pointer;
+    filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.3));
+    opacity: 0;
+    /* Start hidden for animation */
+    animation: fadeInUp 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+    transition: transform 0.3s ease, filter 0.3s ease;
+}
+
+.hexagonWrapper:hover {
+    transform: translateY(-5px);
+    filter: drop-shadow(0 12px 20px rgba(0, 0, 0, 0.5));
+    z-index: 100;
+}
+
+.hexagonWrapper:hover .hexagon {
+    transform: scale(1.05);
+}
+
+.hexagon {
+    width: 100%;
+    height: 100%;
+    background-color: #333;
+    clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    color: white;
+    text-align: center;
+    padding: 1rem;
+    box-sizing: border-box;
+    background-size: cover;
+    background-position: center;
+    border: 2px solid #444;
+    transition: transform 0.3s ease, border-color 0.3s ease;
+}
+
+.hexagonContent {
+    z-index: 2;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    padding: 0.8rem;
+    border-radius: 8px;
+    width: 85%;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+    transition: background 0.3s ease, transform 0.3s ease;
+}
+
+.hexagonWrapper:hover .hexagonContent {
+    background: rgba(0, 0, 0, 0.8);
+    transform: scale(1.02);
+}
+
+.title {
+    font-size: 1.2rem;
+    font-weight: 800;
+    margin: 0;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+.subtitle {
+    font-size: 0.9rem;
+    opacity: 0.9;
+    margin-top: 0.4rem;
+    font-weight: 500;
+}
+
+.centerNode {
+    background-color: #ffb703;
+    color: #000;
+}
+
+.centerNode .hexagonContent {
+    background: rgba(255, 255, 255, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    color: #000;
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px) scale(0.8);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
