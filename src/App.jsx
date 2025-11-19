@@ -2,7 +2,6 @@ import { useState, useRef, useEffect } from 'react'
 import './App.css'
 import HoneycombGrid from './components/HoneycombGrid'
 import SuperlativeModal from './components/SuperlativeModal'
-import { toBlob } from 'html-to-image';
 import { saveState, loadState, clearState } from './utils/db';
 
 function App() {

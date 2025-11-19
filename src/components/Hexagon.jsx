@@ -8,8 +8,6 @@ const Hexagon = ({
     color,
     titleColor,
     subtitleColor,
-    boxColor,
-    boxOpacity,
     onDoubleClick,
     isCenter = false,
     className = '',
@@ -20,15 +18,6 @@ const Hexagon = ({
     const bgStyle = {
         ...(image ? { backgroundImage: `url(${image})` } : {}),
         ...(color ? { backgroundColor: color } : {})
-    };
-
-    // Helper to convert hex to rgba
-    const hexToRgba = (hex, alpha) => {
-        if (!hex) return 'rgba(0, 0, 0, 0.5)'; // Default
-        const r = parseInt(hex.slice(1, 3), 16);
-        const g = parseInt(hex.slice(3, 5), 16);
-        const b = parseInt(hex.slice(5, 7), 16);
-        return `rgba(${r}, ${g}, ${b}, ${alpha !== undefined ? alpha : 0.5})`;
     };
 
     // Handle both double-click (desktop) and double-tap (mobile)

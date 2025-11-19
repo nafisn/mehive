@@ -5,16 +5,16 @@
 ## ✨ Features
 
 -   **Interactive Honeycomb Grid:** Drag and drop hexagons to arrange your year exactly how you want.
--   **Customizable Content:** Double-click any hexagon to edit its title, subtitle, and background image.
+-   **Mobile Responsive:** Optimized for all devices with auto-scaling grid and touch-friendly controls.
+-   **Customizable Content:** Double-tap any hexagon to edit its title, subtitle, and background image.
 -   **Dynamic Layout:** Add new categories or remove ones you don't need. The grid auto-arranges itself!
 -   **Personalization:**
     -   Edit the center node to reflect your name and year.
     -   Customize text colors and background styles for a premium look.
     -   Glassmorphism effects and smooth entry animations.
 -   **Export & Share:**
-    -   **Manual Export:** Drag to select the perfect crop of your hive.
-    -   **Auto Export:** One-click capture of your entire hive layout.
--   **Persistence:** Your progress is automatically saved to your browser's local storage.
+    -   **One-Click Export:** Instantly capture your entire hive layout as a high-quality image, perfectly cropped and scaled.
+-   **Robust Persistence:** Your progress is automatically saved to IndexedDB, ensuring even large images are stored safely without storage limits.
 
 ## 🛠️ Tech Stack
 
@@ -23,6 +23,7 @@
 -   **Libraries:**
     -   `react-draggable`: For the interactive grid layout.
     -   `html-to-image`: For high-quality export functionality.
+    -   `idb`: For robust local data persistence.
 
 ## 🚀 Getting Started
 

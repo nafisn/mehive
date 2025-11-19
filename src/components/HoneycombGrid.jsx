@@ -107,27 +107,7 @@ const HoneycombGrid = forwardRef(({ items, centerItem, onHexagonClick }, ref) =>
         });
     };
 
-    const isConnected = (q, r, currentId) => {
-        // Center node is the anchor
-        if (q === 0 && r === 0) return true;
 
-        // Check neighbors
-        const neighbors = [
-            { dq: 1, dr: 0 }, { dq: -1, dr: 0 },
-            { dq: 0, dr: 1 }, { dq: 0, dr: -1 },
-            { dq: 1, dr: -1 }, { dq: -1, dr: 1 }
-        ];
-
-        return neighbors.some(({ dq, dr }) => {
-            const nQ = q + dq;
-            const nR = r + dr;
-            // Check if any neighbor is occupied by another node
-            return Object.entries(positions).some(([id, pos]) => {
-                if (id === currentId) return false;
-                return pos.q === nQ && pos.r === nR;
-            });
-        });
-    };
 
     const handleStop = (e, data, id) => {
         // 1. Calculate raw grid coordinates from pixels
@@ -156,13 +136,6 @@ const HoneycombGrid = forwardRef(({ items, centerItem, onHexagonClick }, ref) =>
             console.log("Cannot overlap with another hexagon!");
             return;
         }
-
-        // Check Connectivity (Must touch at least one other node, unless it's the only one or center)
-        // For this app, everything must connect to the hive (which starts at center)
-        // if (id !== 'center' && !isConnected(raw.q, raw.r, id)) {
-        //     setErrorMsg("Must connect to the hive!");
-        //     return;
-        // }
 
         // 4. Update State if Valid
         const newPixel = hexToPixel(raw.q, raw.r);
