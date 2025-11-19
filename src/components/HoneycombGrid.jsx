@@ -67,6 +67,7 @@ const DraggableHexagon = ({ item, index, isCenter, position, onStop, onHexagonCl
                     position: 'absolute',
                     top: 0,
                     left: 0,
+                    pointerEvents: 'none', // Allow clicks to pass through the bounding box
                     ...divStyle // Apply animation delay here
                 }}
             >

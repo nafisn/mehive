@@ -146,6 +146,7 @@ function App() {
 
       <div className="ui-controls">
         <h1>MeHive</h1>
+        <p className="instructions">double tap to edit, drag to move cells</p>
         <div className="button-group">
           <button className="add-btn" onClick={handleAddHexagon}>
             ➕ Add Hexagon

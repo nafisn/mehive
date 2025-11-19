@@ -28,11 +28,13 @@
     color: white;
 }
 
-.ui-controls p {
-    margin: 0;
-    opacity: 0.8;
-    font-size: 0.9rem;
-    color: white;
+.instructions {
+    margin: 0 0 10px 0;
+    opacity: 0.7;
+    font-size: 0.8rem;
+    color: #e0e0e0;
+    font-style: italic;
+    letter-spacing: 0.5px;
 }
 
 .button-group {
@@ -57,12 +59,12 @@
 }
 
 .add-btn {
-    background-color: #4cc9f0;
+    background-color: #8f27c0;
     color: #000;
 }
 
 .export-btn {
-    background-color: #f72585;
+    background-color: #1eb541b4;
     color: #fff;
 }
 
