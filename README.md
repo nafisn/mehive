@@ -1,0 +1,74 @@
+# MeHive 🐝
+
+**MeHive** is an interactive, visual way to capture and share your yearly superlatives. Built with React and Vite, it lets you create a personalized honeycomb grid of your favorite memories, media, and moments.
+
+## ✨ Features
+
+-   **Interactive Honeycomb Grid:** Drag and drop hexagons to arrange your year exactly how you want.
+-   **Customizable Content:** Double-click any hexagon to edit its title, subtitle, and background image.
+-   **Dynamic Layout:** Add new categories or remove ones you don't need. The grid auto-arranges itself!
+-   **Personalization:**
+    -   Edit the center node to reflect your name and year.
+    -   Customize text colors and background styles for a premium look.
+    -   Glassmorphism effects and smooth entry animations.
+-   **Export & Share:**
+    -   **Manual Export:** Drag to select the perfect crop of your hive.
+    -   **Auto Export:** One-click capture of your entire hive layout.
+-   **Persistence:** Your progress is automatically saved to your browser's local storage.
+
+## 🛠️ Tech Stack
+
+-   **Framework:** React + Vite
+-   **Styling:** CSS Modules (Vanilla CSS)
+-   **Libraries:**
+    -   `react-draggable`: For the interactive grid layout.
+    -   `html-to-image`: For high-quality export functionality.
+
+## 🚀 Getting Started
+
+### Prerequisites
+
+-   Node.js (v14+ recommended)
+-   npm or yarn
+
+### Installation
+
+1.  Clone the repository:
+    ```bash
+    git clone https://github.com/nafisn/mehive.git
+    cd mehive
+    ```
+
+2.  Install dependencies:
+    ```bash
+    npm install
+    ```
+
+3.  Start the development server:
+    ```bash
+    npm run dev
+    ```
+
+4.  Open your browser at `http://localhost:5173` (or the port shown in your terminal).
+
+## 🐳 Docker Support
+
+You can also run MeHive using Docker:
+
+```bash
+docker-compose up --build
+```
+
+## 📦 Deployment
+
+This project is ready to be deployed on platforms like **Vercel** or **Netlify**.
+
+1.  Push your code to GitHub.
+2.  Import the repository into Vercel/Netlify.
+3.  The build settings should be automatically detected:
+    -   **Build Command:** `npm run build`
+    -   **Output Directory:** `dist`
+
+## 📄 License
+
+This project is open source and available under the [MIT License](LICENSE).
