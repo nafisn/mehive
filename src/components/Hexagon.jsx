@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useRef } from 'react';
 import styles from './Hexagon.module.css';
 
 const Hexagon = ({
@@ -15,6 +15,8 @@ const Hexagon = ({
     className = '',
     style
 }) => {
+    const lastTapRef = useRef(0);
+
     const bgStyle = {
         ...(image ? { backgroundImage: `url(${image})` } : {}),
         ...(color ? { backgroundColor: color } : {})
@@ -33,10 +35,26 @@ const Hexagon = ({
         backgroundColor: hexToRgba(boxColor, boxOpacity)
     };
 
+    // Handle both double-click (desktop) and double-tap (mobile)
+    const handleTap = (e) => {
+        const now = Date.now();
+        const DOUBLE_TAP_DELAY = 300; // ms
+
+        if (now - lastTapRef.current < DOUBLE_TAP_DELAY) {
+            // Double tap detected
+            e.preventDefault();
+            if (onDoubleClick) {
+                onDoubleClick(e);
+            }
+        }
+        lastTapRef.current = now;
+    };
+
     return (
         <div
             className={`${styles.hexagonWrapper} ${className}`}
             onDoubleClick={onDoubleClick}
+            onTouchEnd={handleTap}
             style={style}
         >
             <div
@@ -53,3 +71,4 @@ const Hexagon = ({
 };
 
 export default Hexagon;
+
