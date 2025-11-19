@@ -1,4 +1,4 @@
-# MeHive 🐝
+# MeHive ⬡🐝⬡
 
 **MeHive** is an interactive, visual way to capture and share your yearly superlatives. Built with React and Vite, it lets you create a personalized honeycomb grid of your favorite memories, media, and moments.
 
