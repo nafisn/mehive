@@ -9,7 +9,6 @@
     cursor: pointer;
     filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.3));
     opacity: 0;
-    /* Start hidden for animation */
     animation: fadeInUp 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
     transition: transform 0.3s ease, filter 0.3s ease;
 }
@@ -97,5 +96,37 @@
     to {
         opacity: 1;
         transform: translateY(0) scale(1);
+    }
+}
+
+/* Mobile edit button */
+.mobileEditBtn {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: rgba(255, 255, 255, 0.9);
+    border: none;
+    border-radius: 50%;
+    width: 32px;
+    height: 32px;
+    font-size: 16px;
+    cursor: pointer;
+    z-index: 10;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    transition: transform 0.2s ease, background 0.2s ease;
+}
+
+.mobileEditBtn:active {
+    transform: scale(0.95);
+    background: rgba(255, 255, 255, 1);
+}
+
+/* Show edit button on touch devices */
+@media (hover: none) and (pointer: coarse) {
+    .mobileEditBtn {
+        display: flex;
     }
 }
