@@ -8,17 +8,17 @@ import { toBlob } from 'html-to-image';
 function App() {
   // Initial dummy data based on user request
   const initialData = [
-    { id: 1, title: 'Best Game', subtitle: 'Baldur\'s Gate 3', image: null },
-    { id: 2, title: 'Best Book', subtitle: 'Project Hail Mary', image: null },
-    { id: 3, title: 'Best Movie', subtitle: 'Oppenheimer', image: null },
-    { id: 4, title: 'Best Song', subtitle: 'Not Strong Enough', image: null },
-    { id: 5, title: 'Best Meal', subtitle: 'Sushi at Jiro', image: null },
-    { id: 6, title: 'Best Trip', subtitle: 'Japan 2023', image: null },
+    { id: 1, title: 'Best Game', subtitle: 'Escape From Duckov', image: null },
+    { id: 2, title: 'Best Book', subtitle: 'Cat\'s Cradle', image: null },
+    { id: 3, title: 'Best Movie', subtitle: 'My Dinner with Andre', image: null },
+    { id: 4, title: 'Best Album', subtitle: 'Fancy That', image: null },
+    { id: 5, title: 'Best Meal', subtitle: 'Yoroniku', image: null },
+    { id: 6, title: 'Best Trip', subtitle: 'Japan', image: null },
   ];
 
   const initialCenterNode = {
-    title: "Nafis's Year",
-    subtitle: "2024",
+    title: "Your Year",
+    subtitle: "2025",
     image: null,
     color: '#ffb703',
     isCenter: true
