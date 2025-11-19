@@ -10,8 +10,7 @@
 -   **Dynamic Layout:** Add new categories or remove ones you don't need. The grid auto-arranges itself!
 -   **Personalization:**
     -   Edit the center node to reflect your name and year.
-    -   Customize text colors and background styles for a premium look.
-    -   Glassmorphism effects and smooth entry animations.
+    -   Customize text colors and add images from your favorite memories.
 -   **Export & Share:**
     -   **One-Click Export:** Instantly capture your entire hive layout as a high-quality image, perfectly cropped and scaled.
 -   **Robust Persistence:** Your progress is automatically saved to IndexedDB, ensuring even large images are stored safely without storage limits.
@@ -62,7 +61,7 @@ docker-compose up --build
 
 ## 📦 Deployment
 
-This project is ready to be deployed on platforms like **Vercel** or **Netlify**.
+This project is ready to be deployed on platforms like **Vercel** or **Netlify**. Currently deployed via Vercel.
 
 1.  Push your code to GitHub.
 2.  Import the repository into Vercel/Netlify.
