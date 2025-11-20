@@ -77,12 +77,29 @@ const SuperlativeModal = ({ isOpen, onClose, item, onSave, onDelete }) => {
                     const canvas = document.createElement('canvas');
                     const ctx = canvas.getContext('2d');
 
-                    // Set canvas size to image size
-                    canvas.width = img.width;
-                    canvas.height = img.height;
+                    // Calculate new dimensions (max 800px)
+                    let width = img.width;
+                    let height = img.height;
+                    const MAX_SIZE = 800;
+
+                    if (width > height) {
+                        if (width > MAX_SIZE) {
+                            height *= MAX_SIZE / width;
+                            width = MAX_SIZE;
+                        }
+                    } else {
+                        if (height > MAX_SIZE) {
+                            width *= MAX_SIZE / height;
+                            height = MAX_SIZE;
+                        }
+                    }
+
+                    // Set canvas size to new dimensions
+                    canvas.width = width;
+                    canvas.height = height;
 
                     // Draw image on canvas
-                    ctx.drawImage(img, 0, 0);
+                    ctx.drawImage(img, 0, 0, width, height);
 
                     // Compress to 80% quality JPEG
                     const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.8);
