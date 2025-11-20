@@ -5,24 +5,51 @@ const SuperlativeModal = ({ isOpen, onClose, item, onSave, onDelete }) => {
     const [title, setTitle] = useState('');
     const [subtitle, setSubtitle] = useState('');
     const [image, setImage] = useState(null);
-    const [color, setColor] = useState('#333333');
+    const [color, setColor] = useState('#52d053');
 
     // New Customization State
     const [titleColor, setTitleColor] = useState('#ffffff');
     const [subtitleColor, setSubtitleColor] = useState('#cccccc');
+
+    // Image URL State
+    const [imageUrlInput, setImageUrlInput] = useState('');
+    const [imageError, setImageError] = useState('');
 
     useEffect(() => {
         if (item) {
             setTitle(item.title || '');
             setSubtitle(item.subtitle || '');
             setImage(item.image || null);
-            setColor(item.color || (item.isCenter ? '#ffb703' : '#333333'));
+            setColor(item.color || (item.isCenter ? '#ffb703' : '#52d053'));
 
             // Load new fields or defaults
             setTitleColor(item.titleColor || '#ffffff');
             setSubtitleColor(item.subtitleColor || '#cccccc');
+
+            // Reset URL input
+            setImageUrlInput('');
+            setImageError('');
         }
     }, [item]);
+
+    const handleUrlChange = useCallback((e) => {
+        const url = e.target.value;
+        setImageUrlInput(url);
+        setImageError(''); // Clear error while typing
+
+        if (!url) return;
+
+        // Basic validation by trying to load the image
+        const img = new Image();
+        img.onload = () => {
+            setImage(url); // Valid image, set it
+            setImageError('');
+        };
+        img.onerror = () => {
+            setImageError('Unable to load image. Please check the URL.');
+        };
+        img.src = url;
+    }, []);
 
     const handleImageChange = useCallback((e) => {
         const file = e.target.files[0];
@@ -73,8 +100,6 @@ const SuperlativeModal = ({ isOpen, onClose, item, onSave, onDelete }) => {
     }, [item, onDelete]);
 
     if (!isOpen) return null;
-
-
 
     return (
         <div className={styles.overlay} onClick={onClose}>
@@ -127,8 +152,6 @@ const SuperlativeModal = ({ isOpen, onClose, item, onSave, onDelete }) => {
                     </div>
                 </div>
 
-
-
                 {item?.isCenter && (
                     <div className={styles.formGroup}>
                         <label className={styles.label}>Hexagon Background Color</label>
@@ -161,6 +184,24 @@ const SuperlativeModal = ({ isOpen, onClose, item, onSave, onDelete }) => {
                             className={styles.fileInput}
                             onChange={handleImageChange}
                         />
+
+                        <div style={{ marginTop: '15px', borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: '15px' }}>
+                            <label className={styles.label} style={{ fontSize: '0.9rem', marginBottom: '5px' }}>
+                                Or paste Image URL
+                            </label>
+                            <input
+                                className={styles.input}
+                                value={imageUrlInput}
+                                onChange={handleUrlChange}
+                                placeholder="https://example.com/image.jpg"
+                                style={{ width: '100%' }}
+                            />
+                            {imageError && (
+                                <div style={{ color: '#ff6b6b', fontSize: '0.85rem', marginTop: '5px' }}>
+                                    ⚠️ {imageError}
+                                </div>
+                            )}
+                        </div>
                     </div>
                 )}
 
