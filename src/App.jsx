@@ -8,7 +8,7 @@ import { saveState, loadState, clearState } from './utils/db';
 const initialData = [
   { id: 1, title: 'Best Game', subtitle: 'Escape From Duckov', image: null },
   { id: 2, title: 'Best Book', subtitle: 'Cat\'s Cradle', image: null },
-  { id: 3, title: 'Best Movie', subtitle: 'My Dinner with Andre', image: null },
+  { id: 3, title: 'Best Movie', subtitle: 'One Battle After Another', image: null },
   { id: 4, title: 'Best Album', subtitle: 'Fancy That', image: null },
   { id: 5, title: 'Best Meal', subtitle: 'Yoroniku', image: null },
   { id: 6, title: 'Best Trip', subtitle: 'Japan', image: null },
@@ -18,7 +18,7 @@ const initialCenterNode = {
   title: "Your Year",
   subtitle: "2025",
   image: null,
-  color: '#ffb703',
+  color: '#52d053',
   isCenter: true
 };
 
