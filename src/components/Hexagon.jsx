@@ -1,7 +1,7 @@
 import React, { useRef } from 'react';
 import styles from './Hexagon.module.css';
 
-const Hexagon = ({
+const Hexagon = React.memo(({
     title,
     subtitle,
     image,
@@ -53,6 +53,18 @@ const Hexagon = ({
             </div>
         </div>
     );
-};
+}, (prevProps, nextProps) => {
+    // Custom comparison to prevent unnecessary re-renders
+    return (
+        prevProps.title === nextProps.title &&
+        prevProps.subtitle === nextProps.subtitle &&
+        prevProps.image === nextProps.image &&
+        prevProps.color === nextProps.color &&
+        prevProps.titleColor === nextProps.titleColor &&
+        prevProps.subtitleColor === nextProps.subtitleColor &&
+        prevProps.isCenter === nextProps.isCenter &&
+        prevProps.className === nextProps.className
+    );
+});
 
 export default Hexagon;

@@ -51,6 +51,8 @@
     cursor: pointer;
     font-weight: 600;
     transition: transform 0.2s, opacity 0.2s;
+    position: relative;
+    z-index: 1;
 }
 
 .button-group button:hover {
@@ -58,9 +60,20 @@
     opacity: 0.9;
 }
 
+.button-group button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.button-group button:disabled:hover {
+    transform: none;
+    opacity: 0.5;
+}
+
 .add-btn {
     background-color: #8f27c0;
-    color: #000;
+    color: #fff;
 }
 
 .export-btn {

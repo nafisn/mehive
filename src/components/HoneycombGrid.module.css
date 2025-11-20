@@ -12,5 +12,8 @@
   left: 50%;
   width: 0;
   height: 0;
-  /* This centers the (0,0) coordinate visually */
+  /* Hardware acceleration for smooth scaling and translation */
+  transform: translate3d(0, 0, 0);
+  will-change: transform;
+  backface-visibility: hidden;
 }

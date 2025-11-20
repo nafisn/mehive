@@ -1,27 +1,30 @@
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, useCallback } from 'react'
 import './App.css'
 import HoneycombGrid from './components/HoneycombGrid'
 import SuperlativeModal from './components/SuperlativeModal'
 import { saveState, loadState, clearState } from './utils/db';
 
-function App() {
-  // Initial dummy data based on user request
-  const initialData = [
-    { id: 1, title: 'Best Game', subtitle: 'Escape From Duckov', image: null },
-    { id: 2, title: 'Best Book', subtitle: 'Cat\'s Cradle', image: null },
-    { id: 3, title: 'Best Movie', subtitle: 'My Dinner with Andre', image: null },
-    { id: 4, title: 'Best Album', subtitle: 'Fancy That', image: null },
-    { id: 5, title: 'Best Meal', subtitle: 'Yoroniku', image: null },
-    { id: 6, title: 'Best Trip', subtitle: 'Japan', image: null },
-  ];
+// Initial dummy data - moved outside component to prevent recreation
+const initialData = [
+  { id: 1, title: 'Best Game', subtitle: 'Escape From Duckov', image: null },
+  { id: 2, title: 'Best Book', subtitle: 'Cat\'s Cradle', image: null },
+  { id: 3, title: 'Best Movie', subtitle: 'My Dinner with Andre', image: null },
+  { id: 4, title: 'Best Album', subtitle: 'Fancy That', image: null },
+  { id: 5, title: 'Best Meal', subtitle: 'Yoroniku', image: null },
+  { id: 6, title: 'Best Trip', subtitle: 'Japan', image: null },
+];
 
-  const initialCenterNode = {
-    title: "Your Year",
-    subtitle: "2025",
-    image: null,
-    color: '#ffb703',
-    isCenter: true
-  };
+const initialCenterNode = {
+  title: "Your Year",
+  subtitle: "2025",
+  image: null,
+  color: '#ffb703',
+  isCenter: true
+};
+
+function App() {
+  // Maximum hexagons (excluding center node)
+  const MAX_HEXAGONS = 18;
 
   // Initialize state with defaults first
   const [superlatives, setSuperlatives] = useState(initialData);
@@ -83,12 +86,12 @@ function App() {
     return () => clearTimeout(timeoutId);
   }, [superlatives, centerNode, isLoaded]);
 
-  const handleHexClick = (item) => {
+  const handleHexClick = useCallback((item) => {
     setSelectedItem(item);
     setIsModalOpen(true);
-  };
+  }, []);
 
-  const handleSave = (updatedItem) => {
+  const handleSave = useCallback((updatedItem) => {
     if (updatedItem.isCenter) {
       setCenterNode(updatedItem);
     } else {
@@ -96,26 +99,33 @@ function App() {
         item.id === updatedItem.id ? updatedItem : item
       ));
     }
-  };
+  }, []);
 
-  const handleAddHexagon = () => {
-    const newId = Math.max(...superlatives.map(s => s.id), 0) + 1;
-    const newHex = {
-      id: newId,
-      title: 'New Category',
-      subtitle: 'Description',
-      image: null,
-      color: '#333333'
-    };
-    setSuperlatives(prev => [...prev, newHex]);
-  };
+  const handleAddHexagon = useCallback(() => {
+    setSuperlatives(prev => {
+      // Check if we've reached the limit
+      if (prev.length >= MAX_HEXAGONS) {
+        return prev; // Don't add if at limit
+      }
 
-  const handleDeleteHexagon = (id) => {
+      const newId = Math.max(...prev.map(s => s.id), 0) + 1;
+      const newHex = {
+        id: newId,
+        title: 'New Category',
+        subtitle: 'Description',
+        image: null,
+        color: '#333333'
+      };
+      return [...prev, newHex];
+    });
+  }, [MAX_HEXAGONS]);
+
+  const handleDeleteHexagon = useCallback((id) => {
     setSuperlatives(prev => prev.filter(item => item.id !== id));
     setIsModalOpen(false);
-  };
+  }, []);
 
-  const handleReset = async () => {
+  const handleReset = useCallback(async () => {
     if (window.confirm("Are you sure you want to reset everything? This will delete all your customizations.")) {
       await clearState();
       localStorage.removeItem('mehive_superlatives'); // Just in case
@@ -124,13 +134,13 @@ function App() {
       setCenterNode(initialCenterNode);
       window.location.reload();
     }
-  };
+  }, []);
 
-  const handleAutoExport = () => {
+  const handleAutoExport = useCallback(() => {
     if (gridRef.current) {
       gridRef.current.exportGrid();
     }
-  };
+  }, []);
 
   return (
     <div className="app-container">
@@ -147,14 +157,19 @@ function App() {
         <h1>MeHive</h1>
         <p className="instructions">double tap to edit, drag to move cells</p>
         <div className="button-group">
-          <button className="add-btn" onClick={handleAddHexagon}>
-            ➕ Add Hexagon
+          <button
+            className="add-btn"
+            onClick={handleAddHexagon}
+            disabled={superlatives.length >= MAX_HEXAGONS}
+            title={superlatives.length >= MAX_HEXAGONS ? "Maximum hexagons reached" : "Add a new hexagon"}
+          >
+            ➕ Add Hexagon ({superlatives.length}/{MAX_HEXAGONS})
           </button>
           <button className="export-btn" onClick={handleAutoExport} title="Save image of the entire hive">
             📸 Export Hive
           </button>
-          <button className="reset-btn" onClick={handleReset} style={{ backgroundColor: '#e63946', marginLeft: '10px' }}>
-            Reset
+          <button className="reset-btn" onClick={handleReset} title="Reset all hexagons to default">
+            🔄 Reset
           </button>
         </div>
       </div>

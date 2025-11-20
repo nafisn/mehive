@@ -1,6 +1,6 @@
 // Import toBlob for export functionality
 import { toBlob } from 'html-to-image';
-import React, { useState, useRef, useImperativeHandle, forwardRef } from 'react';
+import React, { useState, useRef, useImperativeHandle, forwardRef, useCallback, useMemo } from 'react';
 import Draggable from 'react-draggable';
 import Hexagon from './Hexagon';
 import styles from './HoneycombGrid.module.css';
@@ -46,17 +46,28 @@ const hexRound = (q, r) => {
     return { q: rq, r: rr };
 };
 
-// Separate component to handle the ref for Draggable
-const DraggableHexagon = ({ item, index, isCenter, position, onStop, onHexagonClick, style }) => {
+
+// Memoized Draggable Hexagon component to prevent unnecessary re-renders
+const DraggableHexagon = React.memo(({ item, index, isCenter, position, onStop, onHexagonClick, style }) => {
     const nodeRef = useRef(null);
     const id = isCenter ? 'center' : item.id;
     const { scale = 1, ...divStyle } = style || {};
+
+    // Memoize the stop handler to prevent recreation
+    const handleStop = useCallback((e, data) => {
+        onStop(e, data, id);
+    }, [onStop, id]);
+
+    // Memoize the click handler
+    const handleClick = useCallback(() => {
+        onHexagonClick(item);
+    }, [onHexagonClick, item]);
 
     return (
         <Draggable
             nodeRef={nodeRef}
             position={position}
-            onStop={(e, data) => onStop(e, data, id)}
+            onStop={handleStop}
             grid={[1, 1]}
             scale={scale}
         >
@@ -67,22 +78,37 @@ const DraggableHexagon = ({ item, index, isCenter, position, onStop, onHexagonCl
                     position: 'absolute',
                     top: 0,
                     left: 0,
-                    pointerEvents: 'none', // Allow clicks to pass through the bounding box
-                    ...divStyle // Apply animation delay here
+                    pointerEvents: 'none',
+                    ...divStyle
                 }}
             >
-                <div style={{ transform: 'translate(-50%, -50%)' }}>
+                <div style={{ transform: 'translate3d(-50%, -50%, 0)' }}>
                     <Hexagon
                         {...item}
                         isCenter={isCenter}
-                        onDoubleClick={() => onHexagonClick(item)}
-                    // Removed className={styles.draggableHex} to avoid conflict
+                        onDoubleClick={handleClick}
                     />
                 </div>
             </div>
         </Draggable>
     );
-};
+}, (prevProps, nextProps) => {
+    // Custom comparison for better memoization
+    return (
+        prevProps.item.id === nextProps.item.id &&
+        prevProps.item.title === nextProps.item.title &&
+        prevProps.item.subtitle === nextProps.item.subtitle &&
+        prevProps.item.image === nextProps.item.image &&
+        prevProps.item.color === nextProps.item.color &&
+        prevProps.item.titleColor === nextProps.item.titleColor &&
+        prevProps.item.subtitleColor === nextProps.item.subtitleColor &&
+        prevProps.position.x === nextProps.position.x &&
+        prevProps.position.y === nextProps.position.y &&
+        prevProps.isCenter === nextProps.isCenter &&
+        prevProps.style?.scale === nextProps.style?.scale &&
+        prevProps.style?.animationDelay === nextProps.style?.animationDelay
+    );
+});
 
 const HoneycombGrid = forwardRef(({ items, centerItem, onHexagonClick }, ref) => {
     // State to track positions: { [id]: { x, y, q, r } }
@@ -93,56 +119,50 @@ const HoneycombGrid = forwardRef(({ items, centerItem, onHexagonClick }, ref) =>
     const [scale, setScale] = useState(1);
     const [translate, setTranslate] = useState({ x: 0, y: 0 });
 
-    const [errorMsg, setErrorMsg] = useState(null);
-
     // Grid Bounds (approximate for now, can be expanded)
-    const BOUNDS = {
+    const BOUNDS = useMemo(() => ({
         minQ: -5, maxQ: 5,
         minR: -5, maxR: 5
-    };
+    }), []);
 
-    const isOccupied = (q, r, currentId) => {
-        return Object.entries(positions).some(([id, pos]) => {
-            if (id === currentId) return false;
-            return pos.q === q && pos.r === r;
-        });
-    };
-
-    const handleStop = (e, data, id) => {
+    const handleStop = useCallback((e, data, id) => {
         // 1. Calculate raw grid coordinates from pixels
-        // We use the data.x/y which are relative to the grid origin
         const raw = pixelToHex(data.x, data.y);
 
-        // 2. Get current position to check if it actually changed
-        const currentPos = positions[id];
+        // 2. Use functional update to get current positions
+        setPositions(prev => {
+            const currentPos = prev[id];
 
-        // Optimization: If position hasn't changed in grid terms, do nothing
-        if (currentPos && currentPos.q === raw.q && currentPos.r === raw.r) {
-            return;
-        }
+            // Optimization: If position hasn't changed in grid terms, do nothing
+            if (currentPos && currentPos.q === raw.q && currentPos.r === raw.r) {
+                return prev;
+            }
 
-        // 3. Validation Checks
-        setErrorMsg(null);
+            // 3. Validation Checks
+            // Check Bounds
+            if (raw.q < BOUNDS.minQ || raw.q > BOUNDS.maxQ || raw.r < BOUNDS.minR || raw.r > BOUNDS.maxR) {
+                console.log("Out of bounds:", raw.q, raw.r);
+                return prev; // Don't update, snap back
+            }
 
-        // Check Bounds
-        if (raw.q < BOUNDS.minQ || raw.q > BOUNDS.maxQ || raw.r < BOUNDS.minR || raw.r > BOUNDS.maxR) {
-            setErrorMsg("Out of bounds!");
-            return; // Snap back happens automatically if we don't update state
-        }
+            // Check Overlap - build spatial map from current positions
+            const occupantId = Object.entries(prev).find(([otherId, pos]) => {
+                return pos.q === raw.q && pos.r === raw.r && String(otherId) !== String(id);
+            });
 
-        // Check Overlap
-        if (isOccupied(raw.q, raw.r, id)) {
-            console.log("Cannot overlap with another hexagon!");
-            return;
-        }
+            if (occupantId) {
+                console.log("Overlap detected at", raw.q, raw.r);
+                return prev; // Don't update, snap back
+            }
 
-        // 4. Update State if Valid
-        const newPixel = hexToPixel(raw.q, raw.r);
-        setPositions(prev => ({
-            ...prev,
-            [id]: { x: newPixel.x, y: newPixel.y, q: raw.q, r: raw.r }
-        }));
-    };
+            // 4. Update State if Valid
+            const newPixel = hexToPixel(raw.q, raw.r);
+            return {
+                ...prev,
+                [id]: { x: newPixel.x, y: newPixel.y, q: raw.q, r: raw.r }
+            };
+        });
+    }, [BOUNDS]);
 
     useImperativeHandle(ref, () => ({
         exportGrid: async () => {
@@ -234,75 +254,79 @@ const HoneycombGrid = forwardRef(({ items, centerItem, onHexagonClick }, ref) =>
         });
     }, [items]);
 
-    // Responsive Scaling
+    // Responsive Scaling with RAF-based debouncing for better performance
     React.useEffect(() => {
+        let rafId = null;
+        let resizeTimeout = null;
+
         const handleResize = () => {
-            const allPositions = Object.values(positions);
-            if (allPositions.length === 0) return;
-
-            const halfW = HEX_WIDTH / 2;
-            const halfH = HEX_HEIGHT / 2;
-            let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
-
-            allPositions.forEach(pos => {
-                if (pos.x - halfW < minX) minX = pos.x - halfW;
-                if (pos.x + halfW > maxX) maxX = pos.x + halfW;
-                if (pos.y - halfH < minY) minY = pos.y - halfH;
-                if (pos.y + halfH > maxY) maxY = pos.y + halfH;
-            });
-
-            const contentWidth = maxX - minX + 100; // Reduced padding for closer zoom
-            const contentHeight = maxY - minY + 100;
-
-            const availableWidth = window.innerWidth;
-            const availableHeight = window.innerHeight - 120; // account for UI
-
-            const scaleX = availableWidth / contentWidth;
-            const scaleY = availableHeight / contentHeight;
-
-            // Use the smaller scale to fit both dimensions, but cap at 1.2 (allow slight zoom in)
-            const newScale = Math.min(1.2, scaleX, scaleY);
-
-            // Calculate center offset
-            const centerX = (minX + maxX) / 2;
-            const centerY = (minY + maxY) / 2;
-
-            // Only update if significantly different to avoid jitter
-            if (Math.abs(newScale - scale) > 0.01 ||
-                Math.abs(-centerX - translate.x) > 1 ||
-                Math.abs(-centerY - translate.y) > 1) {
-                setScale(newScale);
-                setTranslate({ x: -centerX, y: -centerY });
+            // Cancel any pending RAF
+            if (rafId) {
+                cancelAnimationFrame(rafId);
             }
+
+            // Use RAF for smooth updates
+            rafId = requestAnimationFrame(() => {
+                const allPositions = Object.values(positions);
+                if (allPositions.length === 0) return;
+
+                const halfW = HEX_WIDTH / 2;
+                const halfH = HEX_HEIGHT / 2;
+                let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+
+                allPositions.forEach(pos => {
+                    if (pos.x - halfW < minX) minX = pos.x - halfW;
+                    if (pos.x + halfW > maxX) maxX = pos.x + halfW;
+                    if (pos.y - halfH < minY) minY = pos.y - halfH;
+                    if (pos.y + halfH > maxY) maxY = pos.y + halfH;
+                });
+
+                const contentWidth = maxX - minX + 100; // Reduced padding for closer zoom
+                const contentHeight = maxY - minY + 100;
+
+                const availableWidth = window.innerWidth;
+                const availableHeight = window.innerHeight - 120; // account for UI
+
+                const scaleX = availableWidth / contentWidth;
+                const scaleY = availableHeight / contentHeight;
+
+                // Use the smaller scale to fit both dimensions, but cap at 1.2 (allow slight zoom in)
+                const newScale = Math.min(1.2, scaleX, scaleY);
+
+                // Calculate center offset
+                const centerX = (minX + maxX) / 2;
+                const centerY = (minY + maxY) / 2;
+
+                // Only update if significantly different to avoid jitter
+                if (Math.abs(newScale - scale) > 0.01 ||
+                    Math.abs(-centerX - translate.x) > 1 ||
+                    Math.abs(-centerY - translate.y) > 1) {
+                    setScale(newScale);
+                    setTranslate({ x: -centerX, y: -centerY });
+                }
+            });
+        };
+
+        const debouncedResize = () => {
+            clearTimeout(resizeTimeout);
+            resizeTimeout = setTimeout(handleResize, 100);
         };
 
         handleResize(); // Initial calc
-        window.addEventListener('resize', handleResize);
-        return () => window.removeEventListener('resize', handleResize);
+        window.addEventListener('resize', debouncedResize);
+        return () => {
+            window.removeEventListener('resize', debouncedResize);
+            if (rafId) cancelAnimationFrame(rafId);
+            if (resizeTimeout) clearTimeout(resizeTimeout);
+        };
     }, [positions, scale, translate]);
 
-    const getPosition = (id) => {
+    const getPosition = useCallback((id) => {
         return positions[id] || { x: 0, y: 0 };
-    };
+    }, [positions]);
 
     return (
         <div className={styles.gridContainer} id="honeycomb-grid-container">
-            {errorMsg && (
-                <div style={{
-                    position: 'absolute',
-                    top: '20px',
-                    left: '50%',
-                    transform: 'translateX(-50%)',
-                    backgroundColor: 'rgba(255, 0, 0, 0.8)',
-                    color: 'white',
-                    padding: '10px 20px',
-                    borderRadius: '4px',
-                    zIndex: 100,
-                    fontWeight: 'bold'
-                }}>
-                    {errorMsg}
-                </div>
-            )}
             <div className={styles.gridOrigin} style={{ transform: `scale(${scale}) translate(${translate.x}px, ${translate.y}px)` }}>
                 <DraggableHexagon
                     item={centerItem}

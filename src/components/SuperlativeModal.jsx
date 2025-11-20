@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import styles from './SuperlativeModal.module.css';
 
 const SuperlativeModal = ({ isOpen, onClose, item, onSave, onDelete }) => {
@@ -26,18 +26,36 @@ const SuperlativeModal = ({ isOpen, onClose, item, onSave, onDelete }) => {
 
     if (!isOpen) return null;
 
-    const handleImageChange = (e) => {
+    const handleImageChange = useCallback((e) => {
         const file = e.target.files[0];
         if (file) {
             const reader = new FileReader();
             reader.onloadend = () => {
-                setImage(reader.result);
+                // Create an image element to compress
+                const img = new Image();
+                img.onload = () => {
+                    // Create canvas for compression
+                    const canvas = document.createElement('canvas');
+                    const ctx = canvas.getContext('2d');
+
+                    // Set canvas size to image size
+                    canvas.width = img.width;
+                    canvas.height = img.height;
+
+                    // Draw image on canvas
+                    ctx.drawImage(img, 0, 0);
+
+                    // Compress to 80% quality JPEG
+                    const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.8);
+                    setImage(compressedDataUrl);
+                };
+                img.src = reader.result;
             };
             reader.readAsDataURL(file);
         }
-    };
+    }, []);
 
-    const handleSave = () => {
+    const handleSave = useCallback(() => {
         onSave({
             ...item,
             title,
@@ -48,13 +66,13 @@ const SuperlativeModal = ({ isOpen, onClose, item, onSave, onDelete }) => {
             subtitleColor
         });
         onClose();
-    };
+    }, [item, title, subtitle, image, color, titleColor, subtitleColor, onSave, onClose]);
 
-    const handleDelete = () => {
+    const handleDelete = useCallback(() => {
         if (window.confirm("Are you sure you want to delete this hexagon?")) {
             onDelete(item.id);
         }
-    };
+    }, [item, onDelete]);
 
 
 
