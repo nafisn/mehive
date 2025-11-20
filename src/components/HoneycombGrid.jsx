@@ -198,7 +198,24 @@ const HoneycombGrid = forwardRef(({ items, centerItem, onHexagonClick }, ref) =>
             }
 
             try {
-                // Capture the container exactly as it appears (scaled and centered)
+                // iOS Safari Fix: "Warm up" the rendering engine
+                // 1. Wait a moment for any recent DOM changes to settle
+                await new Promise(resolve => setTimeout(resolve, 250));
+
+                // 2. Perform a dummy capture (warm-up)
+                // This forces the browser to decode images and prepare the layout
+                await toBlob(element, {
+                    backgroundColor: '#242424',
+                    width: window.innerWidth,
+                    height: window.innerHeight,
+                    style: { width: '100vw', height: '100vh', overflow: 'hidden' },
+                    filter: (node) => !node.classList || !node.classList.contains('ui-controls')
+                });
+
+                // 3. Wait again to ensure the warm-up is cleared
+                await new Promise(resolve => setTimeout(resolve, 750));
+
+                // 4. Real Capture
                 const blob = await toBlob(element, {
                     backgroundColor: '#242424',
                     width: window.innerWidth,
