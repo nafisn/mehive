@@ -24,8 +24,6 @@ const SuperlativeModal = ({ isOpen, onClose, item, onSave, onDelete }) => {
         }
     }, [item]);
 
-    if (!isOpen) return null;
-
     const handleImageChange = useCallback((e) => {
         const file = e.target.files[0];
         if (file) {
@@ -73,6 +71,8 @@ const SuperlativeModal = ({ isOpen, onClose, item, onSave, onDelete }) => {
             onDelete(item.id);
         }
     }, [item, onDelete]);
+
+    if (!isOpen) return null;
 
 
 
