@@ -130,6 +130,7 @@ function App() {
       await clearState();
       localStorage.removeItem('mehive_superlatives'); // Just in case
       localStorage.removeItem('mehive_center');
+      localStorage.removeItem('mehive_layout');
       setSuperlatives(getInitialData());
       setCenterNode(getInitialCenterNode());
       window.location.reload();

@@ -39,11 +39,25 @@ const SuperlativeModal = ({ isOpen, onClose, item, onSave, onDelete }) => {
 
         if (!url) return;
 
-        // Basic validation by trying to load the image
+        // 1. Check if image exists/loads normally
         const img = new Image();
         img.onload = () => {
-            setImage(url); // Valid image, set it
-            setImageError('');
+            // Image exists. Now check if it supports CORS (required for export)
+            const corsImg = new Image();
+            corsImg.crossOrigin = "anonymous";
+            corsImg.onload = () => {
+                // All good!
+                setImage(url);
+                setImageError('');
+            };
+            corsImg.onerror = () => {
+                // Loads normally but fails CORS - BLOCK IT
+                // Do NOT set the image
+                setImageError('⛔ Export Blocked: This site blocks external access. Please save the image and upload it instead.');
+            };
+            // Add random query param to bypass cache and force a fresh CORS check
+            // This ensures we don't get a false positive/negative from a previous non-CORS cached response
+            corsImg.src = url + (url.includes('?') ? '&' : '?') + 't=' + new Date().getTime();
         };
         img.onerror = () => {
             setImageError('Unable to load image. Please check the URL.');
@@ -198,7 +212,7 @@ const SuperlativeModal = ({ isOpen, onClose, item, onSave, onDelete }) => {
                             />
                             {imageError && (
                                 <div style={{ color: '#ff6b6b', fontSize: '0.85rem', marginTop: '5px' }}>
-                                    ⚠️ {imageError}
+                                    {imageError}
                                 </div>
                             )}
                         </div>

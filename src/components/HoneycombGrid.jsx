@@ -112,10 +112,21 @@ const DraggableHexagon = React.memo(({ item, index, isCenter, position, onStop, 
 
 const HoneycombGrid = forwardRef(({ items, centerItem, onHexagonClick }, ref) => {
     // State to track positions: { [id]: { x, y, q, r } }
-    // Initialize with center node at 0,0,0
-    const [positions, setPositions] = useState({
-        'center': { x: 0, y: 0, q: 0, r: 0 }
+    // Initialize from localStorage if available
+    const [positions, setPositions] = useState(() => {
+        try {
+            const saved = localStorage.getItem('mehive_layout');
+            return saved ? JSON.parse(saved) : { 'center': { x: 0, y: 0, q: 0, r: 0 } };
+        } catch (e) {
+            console.error("Failed to load layout:", e);
+            return { 'center': { x: 0, y: 0, q: 0, r: 0 } };
+        }
     });
+
+    // Persist positions whenever they change
+    React.useEffect(() => {
+        localStorage.setItem('mehive_layout', JSON.stringify(positions));
+    }, [positions]);
     const [scale, setScale] = useState(1);
     const [translate, setTranslate] = useState({ x: 0, y: 0 });
 
@@ -146,16 +157,30 @@ const HoneycombGrid = forwardRef(({ items, centerItem, onHexagonClick }, ref) =>
             }
 
             // Check Overlap - build spatial map from current positions
-            const occupantId = Object.entries(prev).find(([otherId, pos]) => {
+            const occupantEntry = Object.entries(prev).find(([otherId, pos]) => {
                 return pos.q === raw.q && pos.r === raw.r && String(otherId) !== String(id);
             });
 
-            if (occupantId) {
-                console.log("Overlap detected at", raw.q, raw.r);
-                return prev; // Don't update, snap back
+            if (occupantEntry) {
+                const [occupantId] = occupantEntry;
+                console.log(`Swapping ${id} with ${occupantId}`);
+
+                // Swap Logic:
+                // 1. Dragged item (id) takes the target spot (raw)
+                const newPixelForDragged = hexToPixel(raw.q, raw.r);
+
+                // 2. Occupant takes the dragged item's original spot (currentPos)
+                // We recalculate pixels to ensure perfect grid alignment
+                const newPixelForOccupant = hexToPixel(currentPos.q, currentPos.r);
+
+                return {
+                    ...prev,
+                    [id]: { x: newPixelForDragged.x, y: newPixelForDragged.y, q: raw.q, r: raw.r },
+                    [occupantId]: { x: newPixelForOccupant.x, y: newPixelForOccupant.y, q: currentPos.q, r: currentPos.r }
+                };
             }
 
-            // 4. Update State if Valid
+            // 4. Update State if Valid (No overlap, just move)
             const newPixel = hexToPixel(raw.q, raw.r);
             return {
                 ...prev,
