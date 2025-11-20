@@ -4,8 +4,8 @@ import HoneycombGrid from './components/HoneycombGrid'
 import SuperlativeModal from './components/SuperlativeModal'
 import { saveState, loadState, clearState } from './utils/db';
 
-// Initial dummy data - moved outside component to prevent recreation
-const initialData = [
+// Initial dummy data - functions to return fresh objects and prevent mutation
+const getInitialData = () => [
   { id: 1, title: 'Best Game', subtitle: 'Escape From Duckov', image: null },
   { id: 2, title: 'Best Book', subtitle: 'Cat\'s Cradle', image: null },
   { id: 3, title: 'Best Movie', subtitle: 'One Battle After Another', image: null },
@@ -14,21 +14,21 @@ const initialData = [
   { id: 6, title: 'Best Trip', subtitle: 'Japan', image: null },
 ];
 
-const initialCenterNode = {
+const getInitialCenterNode = () => ({
   title: "Your Year",
   subtitle: "2025",
   image: null,
   color: '#52d053',
   isCenter: true
-};
+});
 
 function App() {
   // Maximum hexagons (excluding center node)
   const MAX_HEXAGONS = 18;
 
   // Initialize state with defaults first
-  const [superlatives, setSuperlatives] = useState(initialData);
-  const [centerNode, setCenterNode] = useState(initialCenterNode);
+  const [superlatives, setSuperlatives] = useState(getInitialData());
+  const [centerNode, setCenterNode] = useState(getInitialCenterNode());
   const [isLoaded, setIsLoaded] = useState(false);
 
   // Load data from DB or migrate from localStorage
@@ -130,8 +130,8 @@ function App() {
       await clearState();
       localStorage.removeItem('mehive_superlatives'); // Just in case
       localStorage.removeItem('mehive_center');
-      setSuperlatives(initialData);
-      setCenterNode(initialCenterNode);
+      setSuperlatives(getInitialData());
+      setCenterNode(getInitialCenterNode());
       window.location.reload();
     }
   }, []);
