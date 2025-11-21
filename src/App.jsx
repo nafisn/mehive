@@ -6,12 +6,12 @@ import { saveState, loadState, clearState } from './utils/db';
 
 // Initial dummy data - functions to return fresh objects and prevent mutation
 const getInitialData = () => [
-  { id: 1, title: 'Best Game', subtitle: 'Escape From Duckov', image: null },
-  { id: 2, title: 'Best Book', subtitle: 'Cat\'s Cradle', image: null },
-  { id: 3, title: 'Best Movie', subtitle: 'One Battle After Another', image: null },
-  { id: 4, title: 'Best Album', subtitle: 'Fancy That', image: null },
-  { id: 5, title: 'Best Meal', subtitle: 'Yoroniku', image: null },
-  { id: 6, title: 'Best Trip', subtitle: 'Japan', image: null },
+  { id: 1, title: 'GOTY', subtitle: 'Escape From Duckov', image: null },
+  { id: 2, title: 'Favorite Book', subtitle: 'All Tomorrows', image: null },
+  { id: 3, title: 'Favorite Movie', subtitle: 'One Battle After Another', image: null },
+  { id: 4, title: 'Favorite Album', subtitle: 'Fancy That', image: null },
+  { id: 5, title: 'Favorite Meal', subtitle: 'Yoroniku', image: null },
+  { id: 6, title: 'Favorite Trip', subtitle: 'Japan', image: null },
 ];
 
 const getInitialCenterNode = () => ({
