@@ -352,7 +352,40 @@ const HoneycombGrid = forwardRef(({ items, centerItem, onHexagonClick }, ref) =>
                         ctx.shadowColor = 'rgba(0, 0, 0, 0.9)';
                         ctx.shadowBlur = 4;
                         ctx.shadowOffsetY = 2;
-                        ctx.fillText(hex.data.title.toUpperCase(), canvasX, canvasY - 15);
+
+                        // Wrap text character-by-character
+                        const titleText = hex.data.title.toUpperCase();
+                        const maxWidth = HEX_WIDTH - 40;
+                        const lines = [];
+                        let currentLine = '';
+
+                        for (let i = 0; i < titleText.length; i++) {
+                            const testLine = currentLine + titleText[i];
+                            const metrics = ctx.measureText(testLine);
+                            if (metrics.width > maxWidth && currentLine.length > 0) {
+                                lines.push(currentLine);
+                                currentLine = titleText[i];
+                            } else {
+                                currentLine = testLine;
+                            }
+                        }
+                        if (currentLine.length > 0) {
+                            lines.push(currentLine);
+                        }
+
+                        // Limit to 2 lines
+                        if (lines.length > 2) {
+                            lines.splice(2);
+                            if (lines[1].length > 3) {
+                                lines[1] = lines[1].substring(0, lines[1].length - 3) + '...';
+                            }
+                        }
+
+                        // Draw lines
+                        const titleStartY = canvasY - 15 - ((lines.length - 1) * 12);
+                        lines.forEach((line, i) => {
+                            ctx.fillText(line, canvasX, titleStartY + (i * 24));
+                        });
                     }
 
                     // Subtitle
@@ -362,7 +395,39 @@ const HoneycombGrid = forwardRef(({ items, centerItem, onHexagonClick }, ref) =>
                         ctx.shadowColor = 'rgba(0, 0, 0, 0.9)';
                         ctx.shadowBlur = 4;
                         ctx.shadowOffsetY = 2;
-                        ctx.fillText(hex.data.subtitle, canvasX, canvasY + 15);
+
+                        // Wrap text character-by-character
+                        const maxWidth = HEX_WIDTH - 40;
+                        const lines = [];
+                        let currentLine = '';
+
+                        for (let i = 0; i < hex.data.subtitle.length; i++) {
+                            const testLine = currentLine + hex.data.subtitle[i];
+                            const metrics = ctx.measureText(testLine);
+                            if (metrics.width > maxWidth && currentLine.length > 0) {
+                                lines.push(currentLine);
+                                currentLine = hex.data.subtitle[i];
+                            } else {
+                                currentLine = testLine;
+                            }
+                        }
+                        if (currentLine.length > 0) {
+                            lines.push(currentLine);
+                        }
+
+                        // Limit to 2 lines
+                        if (lines.length > 2) {
+                            lines.splice(2);
+                            if (lines[1].length > 3) {
+                                lines[1] = lines[1].substring(0, lines[1].length - 3) + '...';
+                            }
+                        }
+
+                        // Draw lines
+                        const subtitleStartY = canvasY + 25 - ((lines.length - 1) * 10);
+                        lines.forEach((line, i) => {
+                            ctx.fillText(line, canvasX, subtitleStartY + (i * 20));
+                        });
                     }
 
                     ctx.restore();
