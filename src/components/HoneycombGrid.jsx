@@ -229,9 +229,11 @@ const HoneycombGrid = forwardRef(({ items, centerItem, onHexagonClick }, ref) =>
                 const canvas = document.createElement('canvas');
                 canvas.width = canvasWidth;
                 canvas.height = canvasHeight;
-                const ctx = canvas.getContext('2d');
+                const ctx = canvas.getContext('2d', { alpha: true });
 
-                // Background is transparent by default (no fill needed)
+                // Match the DOM background color for consistent appearance
+                ctx.fillStyle = '#242424';
+                ctx.fillRect(0, 0, canvasWidth, canvasHeight);
 
                 // Helper to draw hexagon path
                 const drawHexagonPath = (ctx, centerX, centerY, width, height) => {
