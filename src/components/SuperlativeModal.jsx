@@ -150,6 +150,7 @@ const SuperlativeModal = ({ isOpen, onClose, item, onSave, onDelete }) => {
                             onChange={e => setTitle(e.target.value)}
                             placeholder={item?.isCenter ? "e.g. Nafis's Year" : "e.g. Best Movie"}
                             style={{ flex: 1 }}
+                            maxLength={25}
                         />
                         <input
                             type="color"
@@ -159,6 +160,9 @@ const SuperlativeModal = ({ isOpen, onClose, item, onSave, onDelete }) => {
                             style={{ width: '40px', height: '40px', padding: 0, border: 'none', cursor: 'pointer' }}
                         />
                     </div>
+                    <small style={{ color: '#999', fontSize: '0.8rem', marginTop: '4px' }}>
+                        {title.length}/25 characters
+                    </small>
                 </div>
 
                 <div className={styles.formGroup}>
@@ -172,6 +176,7 @@ const SuperlativeModal = ({ isOpen, onClose, item, onSave, onDelete }) => {
                             onChange={e => setSubtitle(e.target.value)}
                             placeholder={item?.isCenter ? "e.g. 2024" : "e.g. Oppenheimer"}
                             style={{ flex: 1 }}
+                            maxLength={50}
                         />
                         <input
                             type="color"
@@ -181,6 +186,9 @@ const SuperlativeModal = ({ isOpen, onClose, item, onSave, onDelete }) => {
                             style={{ width: '40px', height: '40px', padding: 0, border: 'none', cursor: 'pointer' }}
                         />
                     </div>
+                    <small style={{ color: '#999', fontSize: '0.8rem', marginTop: '4px' }}>
+                        {subtitle.length}/50 characters
+                    </small>
                 </div>
 
                 {item?.isCenter && (

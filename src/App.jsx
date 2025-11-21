@@ -35,29 +35,12 @@ function App() {
   useEffect(() => {
     const loadData = async () => {
       try {
-        // 1. Try migration from localStorage first
-        const localSuperlatives = localStorage.getItem('mehive_superlatives');
-        const localCenter = localStorage.getItem('mehive_center');
+        // Load from IndexedDB (migration from localStorage is one-time only)
+        const dbSuperlatives = await loadState('mehive_superlatives');
+        if (dbSuperlatives) setSuperlatives(dbSuperlatives);
 
-        if (localSuperlatives) {
-          const parsed = JSON.parse(localSuperlatives);
-          setSuperlatives(parsed);
-          await saveState('mehive_superlatives', parsed);
-          localStorage.removeItem('mehive_superlatives');
-        } else {
-          const dbSuperlatives = await loadState('mehive_superlatives');
-          if (dbSuperlatives) setSuperlatives(dbSuperlatives);
-        }
-
-        if (localCenter) {
-          const parsed = JSON.parse(localCenter);
-          setCenterNode(parsed);
-          await saveState('mehive_center', parsed);
-          localStorage.removeItem('mehive_center');
-        } else {
-          const dbCenter = await loadState('mehive_center');
-          if (dbCenter) setCenterNode(dbCenter);
-        }
+        const dbCenter = await loadState('mehive_center');
+        if (dbCenter) setCenterNode(dbCenter);
       } catch (error) {
         console.error("Error loading data:", error);
       } finally {
