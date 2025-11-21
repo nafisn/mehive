@@ -115,3 +115,8 @@
         font-size: 0.8rem;
     }
 }
+
+/* Ensure dragged item is always on top */
+.hexagon-item.react-draggable-dragging {
+    z-index: 9999 !important;
+}
