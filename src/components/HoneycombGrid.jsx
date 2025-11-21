@@ -247,6 +247,62 @@ const HoneycombGrid = forwardRef(({ items, centerItem, onHexagonClick }, ref) =>
                     ctx.closePath();
                 };
 
+                // Helper to wrap text with word priority
+                const wrapText = (text, maxWidth, maxLines) => {
+                    const words = text.split(' ');
+                    let lines = [];
+                    let currentLine = words[0];
+
+                    for (let i = 1; i < words.length; i++) {
+                        const word = words[i];
+                        const width = ctx.measureText(currentLine + " " + word).width;
+                        if (width < maxWidth) {
+                            currentLine += " " + word;
+                        } else {
+                            lines.push(currentLine);
+                            currentLine = word;
+                        }
+                    }
+                    lines.push(currentLine);
+
+                    // Handle lines that are still too long (single giant words)
+                    const finalLines = [];
+                    for (let line of lines) {
+                        if (ctx.measureText(line).width <= maxWidth) {
+                            finalLines.push(line);
+                        } else {
+                            // Break long line character by character
+                            let subLine = '';
+                            for (let char of line) {
+                                if (ctx.measureText(subLine + char).width > maxWidth) {
+                                    if (subLine) finalLines.push(subLine);
+                                    subLine = char;
+                                } else {
+                                    subLine += char;
+                                }
+                            }
+                            if (subLine) finalLines.push(subLine);
+                        }
+                    }
+
+                    // Limit lines and truncate
+                    if (finalLines.length > maxLines) {
+                        const visibleLines = finalLines.slice(0, maxLines);
+                        const lastLineIndex = maxLines - 1;
+                        let lastLine = visibleLines[lastLineIndex];
+
+                        if (finalLines.length > maxLines) {
+                            if (lastLine.length > 3) {
+                                visibleLines[lastLineIndex] = lastLine.substring(0, lastLine.length - 3) + '...';
+                            } else {
+                                visibleLines[lastLineIndex] = lastLine + '...';
+                            }
+                        }
+                        return visibleLines;
+                    }
+                    return finalLines;
+                };
+
                 // Collect all hexagons with their data
                 const hexagons = [];
 
@@ -353,36 +409,9 @@ const HoneycombGrid = forwardRef(({ items, centerItem, onHexagonClick }, ref) =>
                         ctx.shadowBlur = 4;
                         ctx.shadowOffsetY = 2;
 
-                        // Wrap text character-by-character
-                        const titleText = hex.data.title.toUpperCase();
-                        const maxWidth = HEX_WIDTH - 40;
-                        const lines = [];
-                        let currentLine = '';
-
-                        for (let i = 0; i < titleText.length; i++) {
-                            const testLine = currentLine + titleText[i];
-                            const metrics = ctx.measureText(testLine);
-                            if (metrics.width > maxWidth && currentLine.length > 0) {
-                                lines.push(currentLine);
-                                currentLine = titleText[i];
-                            } else {
-                                currentLine = testLine;
-                            }
-                        }
-                        if (currentLine.length > 0) {
-                            lines.push(currentLine);
-                        }
-
-                        // Limit to 2 lines
-                        if (lines.length > 2) {
-                            lines.splice(2);
-                            if (lines[1].length > 3) {
-                                lines[1] = lines[1].substring(0, lines[1].length - 3) + '...';
-                            }
-                        }
-
-                        // Draw lines
+                        const lines = wrapText(hex.data.title.toUpperCase(), HEX_WIDTH - 60, 2);
                         const titleStartY = canvasY - 15 - ((lines.length - 1) * 12);
+
                         lines.forEach((line, i) => {
                             ctx.fillText(line, canvasX, titleStartY + (i * 24));
                         });
@@ -396,35 +425,9 @@ const HoneycombGrid = forwardRef(({ items, centerItem, onHexagonClick }, ref) =>
                         ctx.shadowBlur = 4;
                         ctx.shadowOffsetY = 2;
 
-                        // Wrap text character-by-character
-                        const maxWidth = HEX_WIDTH - 40;
-                        const lines = [];
-                        let currentLine = '';
-
-                        for (let i = 0; i < hex.data.subtitle.length; i++) {
-                            const testLine = currentLine + hex.data.subtitle[i];
-                            const metrics = ctx.measureText(testLine);
-                            if (metrics.width > maxWidth && currentLine.length > 0) {
-                                lines.push(currentLine);
-                                currentLine = hex.data.subtitle[i];
-                            } else {
-                                currentLine = testLine;
-                            }
-                        }
-                        if (currentLine.length > 0) {
-                            lines.push(currentLine);
-                        }
-
-                        // Limit to 2 lines
-                        if (lines.length > 2) {
-                            lines.splice(2);
-                            if (lines[1].length > 3) {
-                                lines[1] = lines[1].substring(0, lines[1].length - 3) + '...';
-                            }
-                        }
-
-                        // Draw lines
+                        const lines = wrapText(hex.data.subtitle, HEX_WIDTH - 60, 2);
                         const subtitleStartY = canvasY + 25 - ((lines.length - 1) * 10);
+
                         lines.forEach((line, i) => {
                             ctx.fillText(line, canvasX, subtitleStartY + (i * 20));
                         });
