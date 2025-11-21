@@ -1,5 +1,3 @@
-// Import toBlob for export functionality
-import { toBlob } from 'html-to-image';
 import React, { useState, useRef, useImperativeHandle, forwardRef, useCallback, useMemo } from 'react';
 import Draggable from 'react-draggable';
 import Hexagon from './Hexagon';
@@ -123,10 +121,18 @@ const HoneycombGrid = forwardRef(({ items, centerItem, onHexagonClick }, ref) =>
         }
     });
 
-    // Persist positions whenever they change
-    React.useEffect(() => {
-        localStorage.setItem('mehive_layout', JSON.stringify(positions));
-    }, [positions]);
+    // Debounced save to localStorage to avoid excessive writes during rapid drags
+    const saveTimeoutRef = useRef(null);
+    const savePositions = useCallback((newPositions) => {
+        // Clear any pending save
+        if (saveTimeoutRef.current) {
+            clearTimeout(saveTimeoutRef.current);
+        }
+        // Schedule save for 100ms later
+        saveTimeoutRef.current = setTimeout(() => {
+            localStorage.setItem('mehive_layout', JSON.stringify(newPositions));
+        }, 100);
+    }, []);
     const [scale, setScale] = useState(1);
     const [translate, setTranslate] = useState({ x: 0, y: 0 });
 
@@ -161,6 +167,7 @@ const HoneycombGrid = forwardRef(({ items, centerItem, onHexagonClick }, ref) =>
                 return pos.q === raw.q && pos.r === raw.r && String(otherId) !== String(id);
             });
 
+            let newPositions;
             if (occupantEntry) {
                 const [occupantId] = occupantEntry;
                 console.log(`Swapping ${id} with ${occupantId}`);
@@ -173,79 +180,213 @@ const HoneycombGrid = forwardRef(({ items, centerItem, onHexagonClick }, ref) =>
                 // We recalculate pixels to ensure perfect grid alignment
                 const newPixelForOccupant = hexToPixel(currentPos.q, currentPos.r);
 
-                return {
+                newPositions = {
                     ...prev,
                     [id]: { x: newPixelForDragged.x, y: newPixelForDragged.y, q: raw.q, r: raw.r },
                     [occupantId]: { x: newPixelForOccupant.x, y: newPixelForOccupant.y, q: currentPos.q, r: currentPos.r }
                 };
+            } else {
+                // 4. Update State if Valid (No overlap, just move)
+                const newPixel = hexToPixel(raw.q, raw.r);
+                newPositions = {
+                    ...prev,
+                    [id]: { x: newPixel.x, y: newPixel.y, q: raw.q, r: raw.r }
+                };
             }
 
-            // 4. Update State if Valid (No overlap, just move)
-            const newPixel = hexToPixel(raw.q, raw.r);
-            return {
-                ...prev,
-                [id]: { x: newPixel.x, y: newPixel.y, q: raw.q, r: raw.r }
-            };
+            // Save to localStorage
+            savePositions(newPositions);
+            return newPositions;
         });
-    }, [BOUNDS]);
+    }, [BOUNDS, savePositions]);
 
     useImperativeHandle(ref, () => ({
         exportGrid: async () => {
-            const element = document.getElementById('honeycomb-grid-container');
-            if (!element) {
-                alert("Grid container not found!");
-                return;
-            }
-
             try {
-                // iOS Safari Fix: "Warm up" the rendering engine
-                // 1. Wait a moment for any recent DOM changes to settle
-                await new Promise(resolve => setTimeout(resolve, 250));
+                // Calculate bounding box of all hexagons
+                const allPositions = Object.values(positions);
+                if (allPositions.length === 0) {
+                    alert("No hexagons to export!");
+                    return;
+                }
 
-                // 2. Perform a dummy capture (warm-up)
-                // This forces the browser to decode images and prepare the layout
-                await toBlob(element, {
-                    backgroundColor: '#242424',
-                    width: window.innerWidth,
-                    height: window.innerHeight,
-                    style: { width: '100vw', height: '100vh', overflow: 'hidden' },
-                    filter: (node) => !node.classList || !node.classList.contains('ui-controls')
+                const padding = 100;
+                let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+
+                allPositions.forEach(pos => {
+                    const halfW = HEX_WIDTH / 2;
+                    const halfH = HEX_HEIGHT / 2;
+                    if (pos.x - halfW < minX) minX = pos.x - halfW;
+                    if (pos.x + halfW > maxX) maxX = pos.x + halfW;
+                    if (pos.y - halfH < minY) minY = pos.y - halfH;
+                    if (pos.y + halfH > maxY) maxY = pos.y + halfH;
                 });
 
-                // 3. Wait again to ensure the warm-up is cleared
-                await new Promise(resolve => setTimeout(resolve, 750));
+                const canvasWidth = (maxX - minX) + padding * 2;
+                const canvasHeight = (maxY - minY) + padding * 2;
 
-                // 4. Real Capture
-                const blob = await toBlob(element, {
-                    backgroundColor: '#242424',
-                    width: window.innerWidth,
-                    height: window.innerHeight,
-                    style: {
-                        width: '100vw',
-                        height: '100vh',
-                        overflow: 'hidden'
-                    },
-                    filter: (node) => {
-                        // Exclude any UI controls if they somehow got inside (shouldn't happen)
-                        return !node.classList || !node.classList.contains('ui-controls');
+                // Create canvas
+                const canvas = document.createElement('canvas');
+                canvas.width = canvasWidth;
+                canvas.height = canvasHeight;
+                const ctx = canvas.getContext('2d');
+
+                // Background is transparent by default (no fill needed)
+
+                // Helper to draw hexagon path
+                const drawHexagonPath = (ctx, centerX, centerY, width, height) => {
+                    ctx.beginPath();
+                    ctx.moveTo(centerX, centerY - height / 2);
+                    ctx.lineTo(centerX + width / 2, centerY - height / 4);
+                    ctx.lineTo(centerX + width / 2, centerY + height / 4);
+                    ctx.lineTo(centerX, centerY + height / 2);
+                    ctx.lineTo(centerX - width / 2, centerY + height / 4);
+                    ctx.lineTo(centerX - width / 2, centerY - height / 4);
+                    ctx.closePath();
+                };
+
+                // Collect all hexagons with their data
+                const hexagons = [];
+
+                // Add center hexagon
+                const centerPos = positions['center'];
+                if (centerPos) {
+                    hexagons.push({
+                        pos: centerPos,
+                        data: centerItem,
+                        isCenter: true
+                    });
+                }
+
+                // Add regular hexagons
+                items.forEach(item => {
+                    const pos = positions[item.id];
+                    if (pos) {
+                        hexagons.push({
+                            pos,
+                            data: item,
+                            isCenter: false
+                        });
                     }
                 });
 
-                if (!blob) throw new Error("Export failed: Blob is null");
+                // Load all images first
+                const imagePromises = hexagons.map(async (hex) => {
+                    if (hex.data.image) {
+                        return new Promise((resolve) => {
+                            const img = new Image();
+                            img.crossOrigin = "anonymous";
+                            img.onload = () => resolve({ hex, img });
+                            img.onerror = () => resolve({ hex, img: null });
+                            img.src = hex.data.image;
+                        });
+                    }
+                    return Promise.resolve({ hex, img: null });
+                });
 
-                const dataUrl = URL.createObjectURL(blob);
-                const link = document.createElement('a');
-                link.download = 'MeHive-Year.png';
-                link.href = dataUrl;
-                link.click();
-                setTimeout(() => URL.revokeObjectURL(dataUrl), 1000);
+                const loadedImages = await Promise.all(imagePromises);
+
+                // Draw each hexagon
+                loadedImages.forEach(({ hex, img }) => {
+                    const canvasX = hex.pos.x - minX + padding;
+                    const canvasY = hex.pos.y - minY + padding;
+
+                    ctx.save();
+
+                    // Create hexagon clip path
+                    drawHexagonPath(ctx, canvasX, canvasY, HEX_WIDTH, HEX_HEIGHT);
+                    ctx.clip();
+
+                    // Draw background color
+                    ctx.fillStyle = hex.data.color || '#333';
+                    ctx.fill();
+
+                    // Draw image if available
+                    if (img) {
+                        const imgAspect = img.width / img.height;
+                        const hexAspect = HEX_WIDTH / HEX_HEIGHT;
+                        let drawWidth, drawHeight, offsetX, offsetY;
+
+                        if (imgAspect > hexAspect) {
+                            drawHeight = HEX_HEIGHT;
+                            drawWidth = drawHeight * imgAspect;
+                            offsetX = -(drawWidth - HEX_WIDTH) / 2;
+                            offsetY = 0;
+                        } else {
+                            drawWidth = HEX_WIDTH;
+                            drawHeight = drawWidth / imgAspect;
+                            offsetX = 0;
+                            offsetY = -(drawHeight - HEX_HEIGHT) / 2;
+                        }
+
+                        ctx.drawImage(
+                            img,
+                            canvasX - HEX_WIDTH / 2 + offsetX,
+                            canvasY - HEX_HEIGHT / 2 + offsetY,
+                            drawWidth,
+                            drawHeight
+                        );
+                    }
+
+                    ctx.restore();
+
+                    // Draw hexagon border
+                    ctx.save();
+                    drawHexagonPath(ctx, canvasX, canvasY, HEX_WIDTH, HEX_HEIGHT);
+                    ctx.strokeStyle = '#444';
+                    ctx.lineWidth = 2;
+                    ctx.stroke();
+                    ctx.restore();
+
+                    // Draw text
+                    ctx.save();
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+
+                    // Title
+                    if (hex.data.title) {
+                        ctx.fillStyle = hex.data.titleColor || 'white';
+                        ctx.font = 'bold 20px Arial';
+                        ctx.shadowColor = 'rgba(0, 0, 0, 0.9)';
+                        ctx.shadowBlur = 4;
+                        ctx.shadowOffsetY = 2;
+                        ctx.fillText(hex.data.title.toUpperCase(), canvasX, canvasY - 15);
+                    }
+
+                    // Subtitle
+                    if (hex.data.subtitle) {
+                        ctx.fillStyle = hex.data.subtitleColor || 'rgba(255, 255, 255, 0.8)';
+                        ctx.font = '600 17px Arial';
+                        ctx.shadowColor = 'rgba(0, 0, 0, 0.9)';
+                        ctx.shadowBlur = 4;
+                        ctx.shadowOffsetY = 2;
+                        ctx.fillText(hex.data.subtitle, canvasX, canvasY + 15);
+                    }
+
+                    ctx.restore();
+                });
+
+                // Convert canvas to blob and download
+                canvas.toBlob((blob) => {
+                    if (!blob) {
+                        alert("Export failed: Could not create image");
+                        return;
+                    }
+
+                    const url = URL.createObjectURL(blob);
+                    const link = document.createElement('a');
+                    link.download = 'MeHive-Year.png';
+                    link.href = url;
+                    link.click();
+                    setTimeout(() => URL.revokeObjectURL(url), 1000);
+                }, 'image/png');
 
             } catch (err) {
                 console.error('Export failed:', err);
                 alert("Export failed: " + err.message);
             }
         }
-    }));
+    }), [positions, items, centerItem]);
 
     // ... (rest of component: useState init, getPosition, return JSX)
     // Ensure to close the component correctly
@@ -256,8 +397,10 @@ const HoneycombGrid = forwardRef(({ items, centerItem, onHexagonClick }, ref) =>
             const newPositions = { ...prevPositions };
 
             // 1. Remove positions for deleted items
+            // Create a Set of current item IDs for O(1) lookup
+            const currentIds = new Set(items.map(i => String(i.id)));
             Object.keys(newPositions).forEach(key => {
-                if (key !== 'center' && !items.find(i => i.id === parseInt(key))) {
+                if (key !== 'center' && !currentIds.has(key)) {
                     delete newPositions[key];
                 }
             });

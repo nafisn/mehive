@@ -4,16 +4,20 @@
 
 ## ✨ Features
 
--   **Interactive Honeycomb Grid:** Drag and drop hexagons to arrange your year exactly how you want.
+-   **Interactive Honeycomb Grid:** Drag and drop hexagons to arrange your year exactly how you want. Swap positions by dragging one hexagon onto another!
 -   **Mobile Responsive:** Optimized for all devices with auto-scaling grid and touch-friendly controls.
 -   **Customizable Content:** Double-tap any hexagon to edit its title, subtitle, and background image.
 -   **Dynamic Layout:** Add new categories or remove ones you don't need. The grid auto-arranges itself!
 -   **Personalization:**
     -   Edit the center node to reflect your name and year.
-    -   Customize text colors and add images from your favorite memories.
+    -   Customize text colors for titles and subtitles.
+    -   Add images via upload or direct URL (with CORS validation).
+    -   Automatic image optimization (resized to 800px max, 80% JPEG compression).
 -   **Export & Share:**
-    -   **One-Click Export:** Instantly capture your entire hive layout as a high-quality image, perfectly cropped and scaled.
--   **Robust Persistence:** Your progress is automatically saved to IndexedDB, ensuring even large images are stored safely without storage limits.
+    -   **One-Click Export:** Instantly capture your entire hive layout as a high-quality PNG with transparent background.
+    -   **Reliable Export:** Uses native Canvas API for consistent results across all devices, including iOS.
+-   **Robust Persistence:** Your progress is automatically saved to localStorage, with positions preserved across sessions.
+-   **Smart Reset:** One-click reset to clear all customizations and restore default layout.
 
 ## 🛠️ Tech Stack
 
@@ -21,8 +25,7 @@
 -   **Styling:** CSS Modules (Vanilla CSS)
 -   **Libraries:**
     -   `react-draggable`: For the interactive grid layout.
-    -   `html-to-image`: For high-quality export functionality.
-    -   `idb`: For robust local data persistence.
+-   **Storage:** localStorage for data persistence and layout positions.
 
 ## 🚀 Getting Started
 

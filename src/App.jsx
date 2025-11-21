@@ -108,13 +108,14 @@ function App() {
         return prev; // Don't add if at limit
       }
 
-      const newId = Math.max(...prev.map(s => s.id), 0) + 1;
+      // Optimize ID generation - use reduce instead of Math.max with spread
+      const newId = prev.reduce((maxId, item) => Math.max(maxId, item.id), 0) + 1;
       const newHex = {
         id: newId,
         title: 'New Category',
         subtitle: 'Description',
         image: null,
-        color: '#333333'
+        color: '#52d053'
       };
       return [...prev, newHex];
     });
