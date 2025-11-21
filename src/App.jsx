@@ -24,7 +24,7 @@ const getInitialCenterNode = () => ({
 
 function App() {
   // Maximum hexagons (excluding center node)
-  const MAX_HEXAGONS = 18;
+  const MAX_HEXAGONS = 20;
 
   // Initialize state with defaults first
   const [superlatives, setSuperlatives] = useState(getInitialData());
