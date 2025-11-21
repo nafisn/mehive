@@ -135,6 +135,7 @@ function App() {
           items={superlatives}
           centerItem={centerNode}
           onHexagonClick={handleHexClick}
+          isLoaded={isLoaded}
         />
       </div>
 

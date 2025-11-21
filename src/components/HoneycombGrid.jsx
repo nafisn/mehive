@@ -108,7 +108,7 @@ const DraggableHexagon = React.memo(({ item, index, isCenter, position, onStop, 
     );
 });
 
-const HoneycombGrid = forwardRef(({ items, centerItem, onHexagonClick }, ref) => {
+const HoneycombGrid = forwardRef(({ items, centerItem, onHexagonClick, isLoaded }, ref) => {
     // State to track positions: { [id]: { x, y, q, r } }
     // Initialize from localStorage if available
     const [positions, setPositions] = useState(() => {
@@ -458,22 +458,23 @@ const HoneycombGrid = forwardRef(({ items, centerItem, onHexagonClick }, ref) =>
         }
     }), [positions, items, centerItem]);
 
-    // ... (rest of component: useState init, getPosition, return JSX)
-    // Ensure to close the component correctly
-
     // Dynamic Layout Management
     React.useEffect(() => {
         setPositions(prevPositions => {
             const newPositions = { ...prevPositions };
 
             // 1. Remove positions for deleted items
-            // Create a Set of current item IDs for O(1) lookup
-            const currentIds = new Set(items.map(i => String(i.id)));
-            Object.keys(newPositions).forEach(key => {
-                if (key !== 'center' && !currentIds.has(key)) {
-                    delete newPositions[key];
-                }
-            });
+            // Only perform cleanup if the app is fully loaded. 
+            // This prevents deleting positions for items that exist in localStorage but haven't loaded from DB yet.
+            if (isLoaded) {
+                // Create a Set of current item IDs for O(1) lookup
+                const currentIds = new Set(items.map(i => String(i.id)));
+                Object.keys(newPositions).forEach(key => {
+                    if (key !== 'center' && !currentIds.has(key)) {
+                        delete newPositions[key];
+                    }
+                });
+            }
 
             // 2. Add positions for new items
             items.forEach(item => {
