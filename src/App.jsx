@@ -6,7 +6,7 @@ import { saveState, loadState, clearState } from './utils/db';
 
 // Initial dummy data - functions to return fresh objects and prevent mutation
 const getInitialData = () => [
-  { id: 1, title: 'GOTY', subtitle: 'Escape From Duckov', image: null },
+  { id: 1, title: 'GOTY', subtitle: 'Death Stranding 2', image: null },
   { id: 2, title: 'Favorite Book', subtitle: 'All Tomorrows', image: null },
   { id: 3, title: 'Favorite Movie', subtitle: 'One Battle After Another', image: null },
   { id: 4, title: 'Favorite Album', subtitle: 'Fancy That', image: null },
